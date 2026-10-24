@@ -22,7 +22,7 @@ set -euo pipefail
 # Optional (same meaning and validation as scripts/03_create_token.sh; applied by the coin's own init):
 #   TOKEN_INITIAL_SUPPLY       whole tokens minted at publish (default 0); sent to TREASURY_ADDRESS
 #   TOKEN_SUPPLY_POLICY        "mintable" (default; the TreasuryCap goes to TREASURY_ADDRESS) or "fixed"
-#   TOKEN_METADATA_POLICY      "updatable" (default; the MetadataCap stays with the deployer) or "frozen"
+#   TOKEN_METADATA_POLICY      "updatable" (default; the MetadataCap goes to TREASURY_ADDRESS with the TreasuryCap) or "frozen"
 #
 # Usage:
 #   TOKEN_PACKAGE_NAME=my_token TOKEN_MODULE_NAME=mytoken TOKEN_STRUCT_NAME=MYTOKEN \
@@ -363,27 +363,31 @@ echo ""
 # ============================================================================
 # Phase 7: Hand over the supply authority
 # ============================================================================
-# What there is to hand over follows the supply policy: a mintable coin has a TreasuryCap (authority to
-# mint), and an initial supply is a Coin<T>. A fixed supply has no TreasuryCap at all (the registry holds
-# the supply), only the minted coin.
+# What there is to hand over follows the policies: a mintable coin has a TreasuryCap (authority to mint),
+# an updatable coin a MetadataCap (description and icon), and an initial supply is a Coin<T>. A fixed supply
+# has no TreasuryCap (the registry holds the supply) and frozen metadata no MetadataCap. The MetadataCap goes
+# with the TreasuryCap (audit OQ2, decided 2026-10-22): whoever controls the supply also controls what
+# holders see, so a deployer who is not the token's owner keeps no authority over it.
 
 echo "=== Phase 7: Hand over the supply authority ==="
 echo ""
 
 HANDOVER_IDS=()
 [[ -z "$TREASURY_CAP_ID" ]] || HANDOVER_IDS+=("$TREASURY_CAP_ID")
+[[ -z "$METADATA_CAP_ID" ]] || HANDOVER_IDS+=("$METADATA_CAP_ID")
 [[ -z "$INITIAL_COIN_ID" ]] || HANDOVER_IDS+=("$INITIAL_COIN_ID")
 
 if [[ ${#HANDOVER_IDS[@]} -eq 0 ]]; then
-    echo "Nothing to hand over: no TreasuryCap (fixed supply) and no initial supply."
+    echo "Nothing to hand over: no TreasuryCap (fixed supply), no MetadataCap (frozen metadata) and no initial supply."
 else
     [[ -z "$TREASURY_CAP_ID" ]] || echo "  TreasuryCap $TREASURY_CAP_ID  ->  $TREASURY_ADDRESS  (authority to mint supply)"
+    [[ -z "$METADATA_CAP_ID" ]] || echo "  MetadataCap $METADATA_CAP_ID  ->  $TREASURY_ADDRESS  (authority to change description and icon)"
     [[ -z "$INITIAL_COIN_ID" ]] || echo "  Initial supply Coin $INITIAL_COIN_ID  ->  $TREASURY_ADDRESS  (the whole minted supply)"
     echo "  This cannot be undone."
     # The earlier confirmations do not cover this irreversible step: name the address and ask again.
     if [[ "$NETWORK" == "mainnet" ]]; then
         read -rp "Type the first 10 characters of the treasury address (${TREASURY_ADDRESS:0:10}) to transfer: " TRANSFER_CONFIRMATION
-        [[ "$TRANSFER_CONFIRMATION" == "${TREASURY_ADDRESS:0:10}" ]] || { echo "Transfer declined. Both stay with the deployer (${HANDOVER_IDS[*]})." >&2; exit 1; }
+        [[ "$TRANSFER_CONFIRMATION" == "${TREASURY_ADDRESS:0:10}" ]] || { echo "Transfer declined. They stay with the deployer (${HANDOVER_IDS[*]})." >&2; exit 1; }
     else
         read -rp "Type TRANSFER to send them to $TREASURY_ADDRESS: " TRANSFER_CONFIRMATION
         [[ "$TRANSFER_CONFIRMATION" == "TRANSFER" ]] || { echo "Transfer declined. They stay with the deployer (${HANDOVER_IDS[*]})." >&2; exit 1; }
@@ -405,7 +409,9 @@ else
             echo "ERROR: $OBJ_ID is owned by '${NEW_OWNER:-<unknown>}' after the transfer, not $TREASURY_ADDRESS." >&2
             exit 1
         fi
-        if [[ "$OBJ_ID" == "$TREASURY_CAP_ID" ]]; then record TOKEN_TREASURY_CAP_OWNER "$NEW_OWNER"; else record TOKEN_INITIAL_COIN_OWNER "$NEW_OWNER"; fi
+        if [[ "$OBJ_ID" == "$TREASURY_CAP_ID" ]]; then record TOKEN_TREASURY_CAP_OWNER "$NEW_OWNER"
+        elif [[ "$OBJ_ID" == "$METADATA_CAP_ID" ]]; then record TOKEN_METADATA_CAP_OWNER "$NEW_OWNER"
+        else record TOKEN_INITIAL_COIN_OWNER "$NEW_OWNER"; fi
         echo "$OBJ_ID transferred to $TREASURY_ADDRESS (verified on-chain)"
     done
 fi
@@ -433,7 +439,7 @@ Supply policy:      $SUPPLY_POLICY (initial supply: $TOKEN_INITIAL_SUPPLY whole 
 TreasuryCap ID:     ${TREASURY_CAP_ID:-<none: the supply is fixed and recorded in the registry>}${TREASURY_CAP_ID:+ (transferred to $TREASURY_ADDRESS)}
 Initial supply:     ${INITIAL_COIN_ID:-<none>}${INITIAL_COIN_ID:+ (transferred to $TREASURY_ADDRESS)}
 Metadata policy:    $METADATA_POLICY
-MetadataCap ID:     ${METADATA_CAP_ID:-<none: metadata is frozen and recorded in the registry>}${METADATA_CAP_ID:+ (retained by the deployer — can change description/icon)}
+MetadataCap ID:     ${METADATA_CAP_ID:-<none: metadata is frozen and recorded in the registry>}${METADATA_CAP_ID:+ (transferred to $TREASURY_ADDRESS — can change description/icon)}
 Currency ID:        ${CURRENCY_ID:-<see finalize transaction>} (shared, registry-discoverable)
 UpgradeCap ID:      $UPGRADE_CAP_ID ($UPGRADE_CAP_NOTE)
 Blob ID:            $BLOB_ID

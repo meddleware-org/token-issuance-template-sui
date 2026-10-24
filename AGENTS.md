@@ -1,4 +1,4 @@
-# AGENTS.md — sui_token_template Package
+# AGENTS.md — token_issuance_template Package
 
 This package is a **generic Sui coin template and deployment system** for generating immutable, production-grade fungible coin packages.
 
@@ -30,7 +30,7 @@ This package is a **generic Sui coin template and deployment system** for genera
 
 **In a consuming project:**
 
-- `sui_token_template/` is a **template system**, not a coin package itself.
+- `token_issuance_template/` is a **template system**, not a coin package itself.
 - A generated package (e.g. `my_token/`) is a **concrete instance** committed to the consuming project.
 - Any number of coins can be generated the same way, one package per coin type.
 
@@ -51,7 +51,7 @@ This package is a **generic Sui coin template and deployment system** for genera
 
 | File | Purpose | Maintainer Notes |
 | --- | --- | --- |
-| `sources/sui_token_template.move` | Template source; uses buildable placeholder values | Keep minimal. Changes affect all future generated instances. Tests are inline. |
+| `sources/token_issuance_template.move` | Template source; uses buildable placeholder values | Keep minimal. Changes affect all future generated instances. Tests are inline. |
 | `scripts/03_create_token.sh` | Generator: template → concrete instance | Idempotent: updates the instance in place; validates every input (same rules as token-issuance-client) and substitutes exact tokens in one pass; a failing run changes nothing. |
 | `scripts/deploy_token.sh` | Full pipeline: Walrus → generate → build → publish → transfer | Error recovery instructions included. Print recovery commands if phases 7–8 fail post-publish. |
 | `templates/publish.sh` | Per-instance publish → finalize_registration → icon → optional UpgradeCap burn | Copied to every generated instance as `scripts/publish.sh`; resumable; verifies immutability by the UpgradeCap being consumed. |
@@ -66,7 +66,7 @@ This package is a **generic Sui coin template and deployment system** for genera
 
 ### Scope-Specific Changes
 
-**Template source changes** (`sources/sui_token_template.move`):
+**Template source changes** (`sources/token_issuance_template.move`):
 
 - Affects only future generated instances; existing coins are not retroactively updated.
 - Must maintain compilability and test coverage.

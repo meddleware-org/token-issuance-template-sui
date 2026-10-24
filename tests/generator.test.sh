@@ -127,7 +127,7 @@ tree_hash() { (cd "$1" && find . -type f -print0 | sort -z | xargs -0 sha256sum 
 (
   base_env; run "$WORK/lock"
   lock="$WORK/lock/Move.lock"
-  [[ $RC -eq 0 && -f "$lock" ]] && grep -q '^\[pinned.testnet.my_token\]$' "$lock" && ! grep -q 'sui_token_template' "$lock" \
+  [[ $RC -eq 0 && -f "$lock" ]] && grep -q '^\[pinned.testnet.my_token\]$' "$lock" && ! grep -q 'token_issuance_template' "$lock" \
     && ok "the generated package carries Move.lock with its own name as the root pin" || bad "lock carried" "rc=$RC $(cat "$lock" 2>/dev/null)"
   want="$(awk -F'rev = "' '/^\[pinned\.testnet\.Sui\]/{f=1} f && /rev = /{split($2,a,"\""); print a[1]; exit}' "$HERE/Move.lock")"
   have="$(awk -F'rev = "' '/^\[pinned\.testnet\.Sui\]/{f=1} f && /rev = /{split($2,a,"\""); print a[1]; exit}' "$lock")"

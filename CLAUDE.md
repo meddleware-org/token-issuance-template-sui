@@ -1,4 +1,4 @@
-# CLAUDE.md — sui_token_template Package
+# CLAUDE.md — token_issuance_template Package
 
 This package is a **generic Sui coin template and deployment system**. It is not itself deployed; instead, it generates concrete, immutable coin packages for production use.
 
@@ -44,8 +44,8 @@ This separation keeps the coin primitive minimal and auditable.
 
 The template uses valid, compilable placeholder values:
 
-- `sui_token_template::sui_token_template` (valid module identifier)
-- `SUI_TOKEN_TEMPLATE` (valid struct identifier)
+- `token_issuance_template::token_issuance_template` (valid module identifier)
+- `TOKEN_ISSUANCE_TEMPLATE` (valid struct identifier)
 - `0u8` (valid decimals literal)
 - `b"TEMPLATE"` (valid byte string literals)
 
@@ -64,7 +64,7 @@ This ensures:
 ├── Move.toml                    # Template package manifest
 ├── Move.lock                    # Framework pin; shipped, and copied into generated packages
 ├── sources/
-│   └── sui_token_template.move       # Template source with inline tests
+│   └── token_issuance_template.move       # Template source with inline tests
 ├── scripts/
 │   ├── 01_preflight.sh          # Deploy pipeline phase 1
 │   ├── 02_upload_image.sh       # Deploy pipeline phase 2 (Walrus)
@@ -101,13 +101,13 @@ my_token/         # Example: a generated concrete instance
 ### `Move.toml` — Package Manifest
 
 - Minimal: no dependencies beyond Sui framework.
-- Package name and address alias: `sui_token_template`.
+- Package name and address alias: `token_issuance_template`.
 - Generated instances have concrete names (e.g., `my_token`).
 
-### `sources/sui_token_template.move` — Template Source
+### `sources/token_issuance_template.move` — Template Source
 
 - **Exports:** Nothing public. All functionality is used via the coin registry system.
-- **Defines:** `SUI_TOKEN_TEMPLATE` (type witness), `init()` (one-time-use initialization).
+- **Defines:** `TOKEN_ISSUANCE_TEMPLATE` (type witness), `init()` (one-time-use initialization).
 - **Tests:** Six inline unit tests (`init_with` takes the policy as arguments so each combination is testable). One checks whatever constants the package was generated with against the registry's `Currency` (`is_supply_fixed`, `is_metadata_cap_deleted`, `total_supply`), so generated instances inherit a test that stays true after patching; do not write tests that assume the shipped defaults.
 - **Constraints:**
   - Uses `coin_registry::new_currency_with_otw()` to bind the coin type to this package.
@@ -136,13 +136,13 @@ my_token/         # Example: a generated concrete instance
 2. Creates output directory with `sources/` and `scripts/` subdirectories.
 3. Copies and substitutes `Move.toml` (package name only) and carries `Move.lock` (the root pin renamed; an existing instance lock is kept).
 4. Copies `templates/publish.sh` (identifier substitution only).
-5. Copies and substitutes `sui_token_template.move` with all 8 replacements:
-   - Module path: `sui_token_template::sui_token_template` → `$TOKEN_PACKAGE_NAME::$TOKEN_MODULE_NAME`
-   - Struct: `SUI_TOKEN_TEMPLATE` → `$TOKEN_STRUCT_NAME`
+5. Copies and substitutes `token_issuance_template.move` with all 8 replacements:
+   - Module path: `token_issuance_template::token_issuance_template` → `$TOKEN_PACKAGE_NAME::$TOKEN_MODULE_NAME`
+   - Struct: `TOKEN_ISSUANCE_TEMPLATE` → `$TOKEN_STRUCT_NAME`
    - Decimals: `0u8` → `$TOKEN_DECIMALS`
    - Strings (4 occurrences, in order): `b"TEMPLATE"` → actual values
-6. Renames source file: `sui_token_template.move` → `$TOKEN_MODULE_NAME.move`.
-7. Validates no `sui_token_template` identifier remains (catches incomplete substitution).
+6. Renames source file: `token_issuance_template.move` → `$TOKEN_MODULE_NAME.move`.
+7. Validates no `token_issuance_template` identifier remains (catches incomplete substitution).
 
 **Idempotency:** Running again with the same output directory updates the instance in place (generated files are overwritten; other files, `.env.<network>` and `deployments.md` edits aside, are not touched). This is the intended workflow for updating (e.g., setting icon URL before mainnet). The package is generated in a temporary directory and installed only after every check passed, so a failing run leaves an existing directory byte-identical; the script refuses `/`, `$HOME`, `.` and a git work-tree root unless `FORCE_OUTPUT_DIR=1`. Every value is validated with the rules of `@meddleware/token-issuance-client`'s `assertTokenConfig` and written literally (exact tokens and whole lines, one pass); `tests/generator.test.sh` pins this.
 
@@ -160,7 +160,7 @@ my_token/         # Example: a generated concrete instance
 6. **Publish** — Run `sui client publish --gas-budget 100000000`. Parse the package ID and the objects `init` created (TreasuryCap unless fixed, initial supply Coin, MetadataCap unless frozen).
    - **6a Finalize** — `coin_registry::finalize_registration` promotes the pending `Currency`.
    - **6b Burn UpgradeCap** — asks for its own typed `BURN` confirmation (the publish `CONFIRM` does not cover it), then calls `0x2::package::make_immutable`. Declining keeps the UpgradeCap and prints the command to burn it later. The burn is verified by `object_state`: only a definite "not found" for that object ID counts as consumed; a failed lookup (outage, timeout) or a surviving cap aborts, and `TOKEN_UPGRADE_CAP_BURNED=yes` is recorded only after a verified burn.
-7. **Hand over the supply authority** — Transfer the TreasuryCap (if any) and the initial supply Coin to the governance multisig after its own typed confirmation (`TRANSFER`; on mainnet the first 10 characters of the address), then re-read the owner. Every ID is saved to `$OUTPUT_DIR/.env.<network>` as soon as it is known (a second run refuses to publish a second coin). Includes recovery instructions if transfer fails (print object ID and manual command).
+7. **Hand over the supply authority** — Transfer the TreasuryCap (if any), the MetadataCap (if the metadata is updatable; OQ2) and the initial supply Coin to the governance multisig after its own typed confirmation (`TRANSFER`; on mainnet the first 10 characters of the address), then re-read the owner. Every ID is saved to `$OUTPUT_DIR/.env.<network>` as soon as it is known (a second run refuses to publish a second coin). Includes recovery instructions if transfer fails (print object ID and manual command).
 8. **Summary** — Print all IDs, blob URLs, addresses, and next steps. The UpgradeCap line reports the recorded state (`burned — package is immutable`, or `NOT burned — kept by the deployer` with a warning), never an assumption.
 
 **Error Handling:**
@@ -192,7 +192,7 @@ re-run resumes rather than republishing. Unknown arguments are rejected.
 
 ## Shipped bytecode (D23)
 
-- `bytecode/sui_token_template.mv` and `bytecode/build-info.json` ship in the npm package and are
+- `bytecode/token_issuance_template.mv` and `bytecode/build-info.json` ship in the npm package and are
   generated only by `scripts/build-bytecode.sh` (`npm run build:bytecode`). Never edit them by hand.
 - Any change to `sources/` must be followed by `npm run build:bytecode` in the same commit; CI
   (`--check`) fails on a mismatch.
@@ -231,7 +231,7 @@ re-run resumes rather than republishing. Unknown arguments are rejected.
 
 **For Sui Move changes:**
 
-- Any change to `sui_token_template.move` affects all future generated instances.
+- Any change to `token_issuance_template.move` affects all future generated instances.
 - Existing deployed instances do not change; they are committed artifacts.
 - Changes must maintain the template's compilability and test coverage.
 - Do not add dependencies or business logic. Keep the template minimal.
@@ -240,7 +240,7 @@ re-run resumes rather than republishing. Unknown arguments are rejected.
 
 - Changes to `03_create_token.sh` affect only future generations.
 - Changes to `deploy_token.sh` affect only future deployments.
-- Both scripts are part of the template system; they are not generated (they exist only in sui_token_template/).
+- Both scripts are part of the template system; they are not generated (they exist only in token_issuance_template/).
 
 **For documentation changes:**
 

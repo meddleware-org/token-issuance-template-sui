@@ -4,7 +4,7 @@
 
 This policy covers security issues in:
 
-- The Move template (`sources/sui_token_template.move`) — the coin `init` that every generated token
+- The Move template (`sources/token_issuance_template.move`) — the coin `init` that every generated token
   package runs: capability issuance (`TreasuryCap`, `MetadataCap`), coin-registry registration, and
   the fixed metadata constants that downstream tools patch in bytecode.
 - The generator and deployment scripts (`scripts/03_create_token.sh`, `scripts/deploy_token.sh`) and

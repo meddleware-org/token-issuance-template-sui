@@ -156,7 +156,7 @@ The script will guide you through each phase. Read the output carefully:
 - **Phase 4 (Build & Test):** Compiles and runs tests.
 - **Phase 5 (Confirmation):** Prints summary; requires `CONFIRM`.
 - **Phase 6 (Publish):** Publishes to testnet; captures package ID.
-- **Phase 7 (Transfer):** Transfers TreasuryCap to treasury address.
+- **Phase 7 (Transfer):** Transfers the TreasuryCap, the MetadataCap (updatable metadata) and the initial supply to the treasury address.
 - **Phase 8 (Summary):** Prints all IDs and next steps.
 
 ### Step 4: Record Testnet IDs
@@ -578,7 +578,7 @@ Manual recovery:
 
 - **README.md** — Feature overview and detailed reference.
 - **deployments.md** — Post-deployment artefact recording template.
-- **sources/sui_token_template.move** — Template source code.
+- **sources/token_issuance_template.move** — Template source code.
 - **scripts/03_create_token.sh** — Generator script (called by deploy_token.sh).
 - **scripts/deploy_token.sh** — Full deployment pipeline.
 

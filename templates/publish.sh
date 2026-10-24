@@ -15,8 +15,8 @@
 #                                      and whichever of TreasuryCap / MetadataCap the coin's policies keep
 #                                      (a fixed supply has no TreasuryCap, frozen metadata no MetadataCap —
 #                                      `init` applied both in this transaction)
-#   2. coin_registry::finalize_registration → shared, wallet-discoverable Currency<SUI_TOKEN_TEMPLATE>
-#   3. coin_registry::set_icon_url   → network-specific icon (needs SUI_TOKEN_TEMPLATE_ICON_URL);
+#   2. coin_registry::finalize_registration → shared, wallet-discoverable Currency<TOKEN_ISSUANCE_TEMPLATE>
+#   3. coin_registry::set_icon_url   → network-specific icon (needs TOKEN_ISSUANCE_TEMPLATE_ICON_URL);
 #                                      skipped when the metadata policy is "frozen" (the icon is the
 #                                      ICON_URL constant, for good)
 #   4. package::make_immutable       → only with --confirm-immutable or an interactive CONFIRM;
@@ -132,16 +132,16 @@ if [[ "$ACTIVE_ENV" != "$NETWORK" ]]; then
 fi
 
 load_env "$NETWORK"
-COIN_TYPE_SUFFIX="::XMODULENAMEX::SUI_TOKEN_TEMPLATE"
+COIN_TYPE_SUFFIX="::XMODULENAMEX::TOKEN_ISSUANCE_TEMPLATE"
 # Fixed when the package was generated; "frozen" means init deleted the MetadataCap.
 METADATA_POLICY="XMETADATAPOLICYX"
 
 # ─ 1. Publish ────────────────────────────────────────────────────────────────
 
-if [[ -n "${SUI_TOKEN_TEMPLATE_TOKEN_PACKAGE_ID:-}" ]]; then
-	log "XPACKAGENAMEX already published: $SUI_TOKEN_TEMPLATE_TOKEN_PACKAGE_ID (resuming)"
+if [[ -n "${TOKEN_ISSUANCE_TEMPLATE_TOKEN_PACKAGE_ID:-}" ]]; then
+	log "XPACKAGENAMEX already published: $TOKEN_ISSUANCE_TEMPLATE_TOKEN_PACKAGE_ID (resuming)"
 else
-	[[ "$METADATA_POLICY" == "frozen" ]] || require_env "SUI_TOKEN_TEMPLATE_ICON_URL"
+	[[ "$METADATA_POLICY" == "frozen" ]] || require_env "TOKEN_ISSUANCE_TEMPLATE_ICON_URL"
 	log "Publishing XPACKAGENAMEX package from $PKG_DIR..."
 	if [[ "$NETWORK" == "localnet" ]]; then
 		# Sui >= 1.80 only publishes to environments declared in Move.toml; localnet uses an
@@ -152,17 +152,17 @@ else
 		PUBLISH_OUTPUT=$(run_json sui client publish "$PKG_DIR" --json)
 	fi
 
-	SUI_TOKEN_TEMPLATE_TOKEN_PACKAGE_ID=$(get_published_at "$PUBLISH_OUTPUT")
-	SUI_TOKEN_TEMPLATE_TREASURY_CAP_ID=$(get_created_object "$PUBLISH_OUTPUT" "::coin::TreasuryCap<${SUI_TOKEN_TEMPLATE_TOKEN_PACKAGE_ID}${COIN_TYPE_SUFFIX}>")
-	SUI_TOKEN_TEMPLATE_METADATA_CAP_ID=$(get_created_object "$PUBLISH_OUTPUT" "::coin_registry::MetadataCap<${SUI_TOKEN_TEMPLATE_TOKEN_PACKAGE_ID}${COIN_TYPE_SUFFIX}>")
-	SUI_TOKEN_TEMPLATE_PENDING_CURRENCY_ID=$(get_created_object "$PUBLISH_OUTPUT" "::coin_registry::Currency<${SUI_TOKEN_TEMPLATE_TOKEN_PACKAGE_ID}${COIN_TYPE_SUFFIX}>")
-	SUI_TOKEN_TEMPLATE_UPGRADE_CAP_ID=$(get_created_object "$PUBLISH_OUTPUT" "::package::UpgradeCap")
+	TOKEN_ISSUANCE_TEMPLATE_TOKEN_PACKAGE_ID=$(get_published_at "$PUBLISH_OUTPUT")
+	TOKEN_ISSUANCE_TEMPLATE_TREASURY_CAP_ID=$(get_created_object "$PUBLISH_OUTPUT" "::coin::TreasuryCap<${TOKEN_ISSUANCE_TEMPLATE_TOKEN_PACKAGE_ID}${COIN_TYPE_SUFFIX}>")
+	TOKEN_ISSUANCE_TEMPLATE_METADATA_CAP_ID=$(get_created_object "$PUBLISH_OUTPUT" "::coin_registry::MetadataCap<${TOKEN_ISSUANCE_TEMPLATE_TOKEN_PACKAGE_ID}${COIN_TYPE_SUFFIX}>")
+	TOKEN_ISSUANCE_TEMPLATE_PENDING_CURRENCY_ID=$(get_created_object "$PUBLISH_OUTPUT" "::coin_registry::Currency<${TOKEN_ISSUANCE_TEMPLATE_TOKEN_PACKAGE_ID}${COIN_TYPE_SUFFIX}>")
+	TOKEN_ISSUANCE_TEMPLATE_UPGRADE_CAP_ID=$(get_created_object "$PUBLISH_OUTPUT" "::package::UpgradeCap")
 	# The minted initial supply (absent when the supply is 0). Exact type: `Coin<…>` also ends the type of
 	# no other object created here.
-	SUI_TOKEN_TEMPLATE_INITIAL_COIN_ID=$(get_created_object "$PUBLISH_OUTPUT" "::coin::Coin<${SUI_TOKEN_TEMPLATE_TOKEN_PACKAGE_ID}${COIN_TYPE_SUFFIX}>")
+	TOKEN_ISSUANCE_TEMPLATE_INITIAL_COIN_ID=$(get_created_object "$PUBLISH_OUTPUT" "::coin::Coin<${TOKEN_ISSUANCE_TEMPLATE_TOKEN_PACKAGE_ID}${COIN_TYPE_SUFFIX}>")
 
 	# Always present.
-	for v in SUI_TOKEN_TEMPLATE_TOKEN_PACKAGE_ID SUI_TOKEN_TEMPLATE_PENDING_CURRENCY_ID SUI_TOKEN_TEMPLATE_UPGRADE_CAP_ID; do
+	for v in TOKEN_ISSUANCE_TEMPLATE_TOKEN_PACKAGE_ID TOKEN_ISSUANCE_TEMPLATE_PENDING_CURRENCY_ID TOKEN_ISSUANCE_TEMPLATE_UPGRADE_CAP_ID; do
 		if [[ -z "${!v}" || "${!v}" == "null" ]]; then
 			log "ERROR: could not extract $v from publish output"
 			log "Output: $PUBLISH_OUTPUT"
@@ -171,63 +171,63 @@ else
 	done
 	# Present only if the coin's policies keep them. A MetadataCap is required unless the metadata is frozen;
 	# a missing TreasuryCap means a fixed supply, which the registry records.
-	if [[ "$METADATA_POLICY" != "frozen" && -z "$SUI_TOKEN_TEMPLATE_METADATA_CAP_ID" ]]; then
+	if [[ "$METADATA_POLICY" != "frozen" && -z "$TOKEN_ISSUANCE_TEMPLATE_METADATA_CAP_ID" ]]; then
 		log "ERROR: could not extract the MetadataCap from publish output (metadata policy: $METADATA_POLICY)"
 		log "Output: $PUBLISH_OUTPUT"
 		exit 1
 	fi
-	for v in SUI_TOKEN_TEMPLATE_TOKEN_PACKAGE_ID SUI_TOKEN_TEMPLATE_PENDING_CURRENCY_ID SUI_TOKEN_TEMPLATE_UPGRADE_CAP_ID \
-		SUI_TOKEN_TEMPLATE_TREASURY_CAP_ID SUI_TOKEN_TEMPLATE_METADATA_CAP_ID SUI_TOKEN_TEMPLATE_INITIAL_COIN_ID; do
+	for v in TOKEN_ISSUANCE_TEMPLATE_TOKEN_PACKAGE_ID TOKEN_ISSUANCE_TEMPLATE_PENDING_CURRENCY_ID TOKEN_ISSUANCE_TEMPLATE_UPGRADE_CAP_ID \
+		TOKEN_ISSUANCE_TEMPLATE_TREASURY_CAP_ID TOKEN_ISSUANCE_TEMPLATE_METADATA_CAP_ID TOKEN_ISSUANCE_TEMPLATE_INITIAL_COIN_ID; do
 		[[ -z "${!v}" ]] || save_env "$NETWORK" "$v" "${!v}"
 	done
 	log "Published XPACKAGENAMEX package successfully"
 fi
-COIN_TYPE="${SUI_TOKEN_TEMPLATE_TOKEN_PACKAGE_ID}${COIN_TYPE_SUFFIX}"
+COIN_TYPE="${TOKEN_ISSUANCE_TEMPLATE_TOKEN_PACKAGE_ID}${COIN_TYPE_SUFFIX}"
 
 # ─ 2. finalize_registration ──────────────────────────────────────────────────
 # OTW currencies need this second step to become a real, shared, RPC-discoverable
-# Currency<SUI_TOKEN_TEMPLATE>. Anyone may perform it; doing it here keeps deploys self-contained.
+# Currency<TOKEN_ISSUANCE_TEMPLATE>. Anyone may perform it; doing it here keeps deploys self-contained.
 
-if [[ -n "${SUI_TOKEN_TEMPLATE_METADATA_OBJECT_ID:-}" ]]; then
-	log "Currency already registered: $SUI_TOKEN_TEMPLATE_METADATA_OBJECT_ID"
+if [[ -n "${TOKEN_ISSUANCE_TEMPLATE_METADATA_OBJECT_ID:-}" ]]; then
+	log "Currency already registered: $TOKEN_ISSUANCE_TEMPLATE_METADATA_OBJECT_ID"
 else
-	require_env "SUI_TOKEN_TEMPLATE_PENDING_CURRENCY_ID"
-	log "Promoting Currency<SUI_TOKEN_TEMPLATE> via coin_registry::finalize_registration..."
+	require_env "TOKEN_ISSUANCE_TEMPLATE_PENDING_CURRENCY_ID"
+	log "Promoting Currency<TOKEN_ISSUANCE_TEMPLATE> via coin_registry::finalize_registration..."
 	FINALIZE_REG_OUTPUT=$(run_json sui client call \
 		--package 0x2 \
 		--module coin_registry \
 		--function finalize_registration \
 		--type-args "$COIN_TYPE" \
-		--args 0xc "$SUI_TOKEN_TEMPLATE_PENDING_CURRENCY_ID" \
+		--args 0xc "$TOKEN_ISSUANCE_TEMPLATE_PENDING_CURRENCY_ID" \
 		--gas-budget 100000000 \
 		--json)
-	SUI_TOKEN_TEMPLATE_METADATA_OBJECT_ID=$(get_created_object "$FINALIZE_REG_OUTPUT" "::coin_registry::Currency<${COIN_TYPE}>")
-	if [[ -z "$SUI_TOKEN_TEMPLATE_METADATA_OBJECT_ID" ]]; then
-		log "ERROR: could not extract the shared Currency<SUI_TOKEN_TEMPLATE> ID from finalize_registration output"
+	TOKEN_ISSUANCE_TEMPLATE_METADATA_OBJECT_ID=$(get_created_object "$FINALIZE_REG_OUTPUT" "::coin_registry::Currency<${COIN_TYPE}>")
+	if [[ -z "$TOKEN_ISSUANCE_TEMPLATE_METADATA_OBJECT_ID" ]]; then
+		log "ERROR: could not extract the shared Currency<TOKEN_ISSUANCE_TEMPLATE> ID from finalize_registration output"
 		log "Output: $FINALIZE_REG_OUTPUT"
 		exit 1
 	fi
-	save_env "$NETWORK" "SUI_TOKEN_TEMPLATE_METADATA_OBJECT_ID" "$SUI_TOKEN_TEMPLATE_METADATA_OBJECT_ID"
+	save_env "$NETWORK" "TOKEN_ISSUANCE_TEMPLATE_METADATA_OBJECT_ID" "$TOKEN_ISSUANCE_TEMPLATE_METADATA_OBJECT_ID"
 fi
 
 # ─ 3. Network-specific icon URL (while the sender still holds MetadataCap) ──
 
-if [[ -z "${SUI_TOKEN_TEMPLATE_METADATA_CAP_ID:-}" ]]; then
+if [[ -z "${TOKEN_ISSUANCE_TEMPLATE_METADATA_CAP_ID:-}" ]]; then
 	log "Metadata is frozen (no MetadataCap): the icon stays the ICON_URL constant compiled into the package"
-elif [[ "${SUI_TOKEN_TEMPLATE_ICON_URL_SET:-}" == "${SUI_TOKEN_TEMPLATE_ICON_URL:-}" && -n "${SUI_TOKEN_TEMPLATE_ICON_URL:-}" ]]; then
-	log "Icon URL already set: $SUI_TOKEN_TEMPLATE_ICON_URL"
+elif [[ "${TOKEN_ISSUANCE_TEMPLATE_ICON_URL_SET:-}" == "${TOKEN_ISSUANCE_TEMPLATE_ICON_URL:-}" && -n "${TOKEN_ISSUANCE_TEMPLATE_ICON_URL:-}" ]]; then
+	log "Icon URL already set: $TOKEN_ISSUANCE_TEMPLATE_ICON_URL"
 else
-	require_env "SUI_TOKEN_TEMPLATE_ICON_URL"
+	require_env "TOKEN_ISSUANCE_TEMPLATE_ICON_URL"
 	log "Setting icon URL via coin_registry::set_icon_url..."
 	run_json sui client call \
 		--package 0x2 \
 		--module coin_registry \
 		--function set_icon_url \
 		--type-args "$COIN_TYPE" \
-		--args "$SUI_TOKEN_TEMPLATE_METADATA_OBJECT_ID" "$SUI_TOKEN_TEMPLATE_METADATA_CAP_ID" "$SUI_TOKEN_TEMPLATE_ICON_URL" \
+		--args "$TOKEN_ISSUANCE_TEMPLATE_METADATA_OBJECT_ID" "$TOKEN_ISSUANCE_TEMPLATE_METADATA_CAP_ID" "$TOKEN_ISSUANCE_TEMPLATE_ICON_URL" \
 		--gas-budget 100000000 \
 		--json > /dev/null
-	save_env "$NETWORK" "SUI_TOKEN_TEMPLATE_ICON_URL_SET" "$SUI_TOKEN_TEMPLATE_ICON_URL"
+	save_env "$NETWORK" "TOKEN_ISSUANCE_TEMPLATE_ICON_URL_SET" "$TOKEN_ISSUANCE_TEMPLATE_ICON_URL"
 fi
 
 # ─ 4. Irreversible: burn the UpgradeCap to make the package immutable ───────
@@ -236,10 +236,10 @@ fi
 # definitely stops the run instead of being read as "consumed" (an unverifiable lookup is never a claim of
 # immutability). Call it directly, not inside $(...): the exit must end the script.
 read_cap_state() {
-	CAP_STATE=$(object_state "$SUI_TOKEN_TEMPLATE_UPGRADE_CAP_ID")
+	CAP_STATE=$(object_state "$TOKEN_ISSUANCE_TEMPLATE_UPGRADE_CAP_ID")
 	if [[ "$CAP_STATE" == "unknown" ]]; then
-		log "ERROR: cannot tell whether UpgradeCap $SUI_TOKEN_TEMPLATE_UPGRADE_CAP_ID still exists (see the CLI output above)."
-		log "       Nothing is claimed about immutability. Re-run when the node answers, or check: sui client object $SUI_TOKEN_TEMPLATE_UPGRADE_CAP_ID"
+		log "ERROR: cannot tell whether UpgradeCap $TOKEN_ISSUANCE_TEMPLATE_UPGRADE_CAP_ID still exists (see the CLI output above)."
+		log "       Nothing is claimed about immutability. Re-run when the node answers, or check: sui client object $TOKEN_ISSUANCE_TEMPLATE_UPGRADE_CAP_ID"
 		exit 1
 	fi
 }
@@ -250,20 +250,20 @@ burn_upgrade_cap() {
 		--package 0x2 \
 		--module package \
 		--function make_immutable \
-		--args "$SUI_TOKEN_TEMPLATE_UPGRADE_CAP_ID" \
+		--args "$TOKEN_ISSUANCE_TEMPLATE_UPGRADE_CAP_ID" \
 		--gas-budget 100000000 \
 		--json > /dev/null
 	# A package object is always "Immutable"-owned, so the only proof of immutability is that the
 	# UpgradeCap was consumed: a definite "not found", not merely a failed lookup.
 	read_cap_state
 	if [[ "$CAP_STATE" != "gone" ]]; then
-		log "ERROR: UpgradeCap $SUI_TOKEN_TEMPLATE_UPGRADE_CAP_ID still exists after make_immutable"
+		log "ERROR: UpgradeCap $TOKEN_ISSUANCE_TEMPLATE_UPGRADE_CAP_ID still exists after make_immutable"
 		exit 1
 	fi
-	log "✓ Package $SUI_TOKEN_TEMPLATE_TOKEN_PACKAGE_ID is now permanently immutable (UpgradeCap consumed)"
+	log "✓ Package $TOKEN_ISSUANCE_TEMPLATE_TOKEN_PACKAGE_ID is now permanently immutable (UpgradeCap consumed)"
 }
 
-if [[ -z "${SUI_TOKEN_TEMPLATE_UPGRADE_CAP_ID:-}" ]]; then
+if [[ -z "${TOKEN_ISSUANCE_TEMPLATE_UPGRADE_CAP_ID:-}" ]]; then
 	log "ERROR: no UpgradeCap ID is recorded in .env.$NETWORK, so immutability cannot be verified."
 	exit 1
 fi
@@ -275,22 +275,22 @@ elif [[ "$CONFIRM_IMMUTABLE" == "true" ]]; then
 else
 	log ""
 	log "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-	log "UpgradeCap $SUI_TOKEN_TEMPLATE_UPGRADE_CAP_ID NOT burned — the package remains upgradeable."
+	log "UpgradeCap $TOKEN_ISSUANCE_TEMPLATE_UPGRADE_CAP_ID NOT burned — the package remains upgradeable."
 	log "Burn it now, or later with: bash $0 $NETWORK --confirm-immutable"
 	read -r -p "Type CONFIRM to burn the UpgradeCap and make the package immutable: " ANSWER
 	if [[ "$ANSWER" == "CONFIRM" ]]; then
 		burn_upgrade_cap
 	else
-		log "Skipped immutability step. UpgradeCap $SUI_TOKEN_TEMPLATE_UPGRADE_CAP_ID is retained."
+		log "Skipped immutability step. UpgradeCap $TOKEN_ISSUANCE_TEMPLATE_UPGRADE_CAP_ID is retained."
 	fi
 	log "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 fi
 
 if [[ "$OUTPUT_ENV" == "true" ]]; then
-	echo "SUI_TOKEN_TEMPLATE_TOKEN_PACKAGE_ID=$SUI_TOKEN_TEMPLATE_TOKEN_PACKAGE_ID"
-	echo "SUI_TOKEN_TEMPLATE_TREASURY_CAP_ID=${SUI_TOKEN_TEMPLATE_TREASURY_CAP_ID:-}"
-	echo "SUI_TOKEN_TEMPLATE_METADATA_CAP_ID=${SUI_TOKEN_TEMPLATE_METADATA_CAP_ID:-}"
-	echo "SUI_TOKEN_TEMPLATE_INITIAL_COIN_ID=${SUI_TOKEN_TEMPLATE_INITIAL_COIN_ID:-}"
-	echo "SUI_TOKEN_TEMPLATE_METADATA_OBJECT_ID=$SUI_TOKEN_TEMPLATE_METADATA_OBJECT_ID"
-	echo "SUI_TOKEN_TEMPLATE_UPGRADE_CAP_ID=$SUI_TOKEN_TEMPLATE_UPGRADE_CAP_ID"
+	echo "TOKEN_ISSUANCE_TEMPLATE_TOKEN_PACKAGE_ID=$TOKEN_ISSUANCE_TEMPLATE_TOKEN_PACKAGE_ID"
+	echo "TOKEN_ISSUANCE_TEMPLATE_TREASURY_CAP_ID=${TOKEN_ISSUANCE_TEMPLATE_TREASURY_CAP_ID:-}"
+	echo "TOKEN_ISSUANCE_TEMPLATE_METADATA_CAP_ID=${TOKEN_ISSUANCE_TEMPLATE_METADATA_CAP_ID:-}"
+	echo "TOKEN_ISSUANCE_TEMPLATE_INITIAL_COIN_ID=${TOKEN_ISSUANCE_TEMPLATE_INITIAL_COIN_ID:-}"
+	echo "TOKEN_ISSUANCE_TEMPLATE_METADATA_OBJECT_ID=$TOKEN_ISSUANCE_TEMPLATE_METADATA_OBJECT_ID"
+	echo "TOKEN_ISSUANCE_TEMPLATE_UPGRADE_CAP_ID=$TOKEN_ISSUANCE_TEMPLATE_UPGRADE_CAP_ID"
 fi

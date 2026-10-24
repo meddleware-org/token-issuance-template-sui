@@ -4,7 +4,7 @@ title: Token template — on-chain overview
 
 # Token template — on-chain overview
 
-`sui_token_template` is the Move source every Meddleware-generated **Sui coin** is built from. The
+`token_issuance_template` is the Move source every Meddleware-generated **Sui coin** is built from. The
 Token Issuance (browser) and the `deploy_token.sh` pipeline (CLI) turn it into a concrete, standalone
 coin package: one package per coin, with its own coin type `<PACKAGE_ID>::<module>::<STRUCT>`.
 

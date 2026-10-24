@@ -5,25 +5,25 @@
 ///
 /// ## Overview
 ///
-/// Defines the `SUI_TOKEN_TEMPLATE` type witness and initializes the token via the modern
+/// Defines the `TOKEN_ISSUANCE_TEMPLATE` type witness and initializes the token via the modern
 /// `coin_registry::new_currency_with_otw` pattern (the framework's documented
 /// replacement for deprecated `coin::create_currency`). Name, symbol, and decimals
 /// are permanently immutable. Description and icon URL remain updatable via
-/// governance entry points, using a `MetadataCap<SUI_TOKEN_TEMPLATE>` rather than the `TreasuryCap`.
+/// governance entry points, using a `MetadataCap<TOKEN_ISSUANCE_TEMPLATE>` rather than the `TreasuryCap`.
 ///
 /// ## Key Types
 ///
-/// - `SUI_TOKEN_TEMPLATE` — the type witness (zero-field struct with `drop` ability) used for one-time-witness initialization
+/// - `TOKEN_ISSUANCE_TEMPLATE` — the type witness (zero-field struct with `drop` ability) used for one-time-witness initialization
 ///
 /// ## Deployment
 ///
 /// `init()` is a two-step OTW flow, and it applies the deployer's supply and metadata policies
 /// itself, in the same transaction that publishes the package (there is no later transaction in
 /// which the caps exist unprotected):
-/// 1. `coin_registry::new_currency_with_otw` builds the `Currency<SUI_TOKEN_TEMPLATE>` from the
+/// 1. `coin_registry::new_currency_with_otw` builds the `Currency<TOKEN_ISSUANCE_TEMPLATE>` from the
 ///    constants below (the icon URL is the `ICON_URL` constant, which a deployer patches and
 ///    `scripts/publish.sh` may replace per network — see below) and mints
-///    `TreasuryCap<SUI_TOKEN_TEMPLATE>`.
+///    `TreasuryCap<TOKEN_ISSUANCE_TEMPLATE>`.
 /// 2. `INITIAL_SUPPLY` (raw units, 0 = none) is minted to the sender.
 /// 3. `FIXED_SUPPLY`: `make_supply_fixed` hands the `TreasuryCap` to the registry, so the supply
 ///    can never grow and `Currency.is_supply_fixed` / `total_supply` report it. Otherwise the
@@ -31,14 +31,14 @@
 /// 4. `FROZEN_METADATA`: `finalize_and_delete_metadata_cap` deletes the `MetadataCap`, so name,
 ///    symbol, description and icon can never change and `Currency.is_metadata_cap_deleted` reports
 ///    it. Otherwise `.finalize(ctx)` claims a live `MetadataCap` for the sender. Either way the
-///    pending `Currency<SUI_TOKEN_TEMPLATE>` is transferred to the registry address `0xc`.
+///    pending `Currency<TOKEN_ISSUANCE_TEMPLATE>` is transferred to the registry address `0xc`.
 ///
 /// From there, `scripts/publish.sh` / the deployer client:
 /// - call `coin_registry::finalize_registration` (required for OTW currencies —
-///   promotes the pending `Currency<SUI_TOKEN_TEMPLATE>` into a real shared, RPC-discoverable
+///   promotes the pending `Currency<TOKEN_ISSUANCE_TEMPLATE>` into a real shared, RPC-discoverable
 ///   object),
 /// - with `FROZEN_METADATA` off, `scripts/publish.sh` calls `coin_registry::set_icon_url` using the
-///   freshly-held `MetadataCap` and a network-specific `SUI_TOKEN_TEMPLATE_ICON_URL` env var — this
+///   freshly-held `MetadataCap` and a network-specific `TOKEN_ISSUANCE_TEMPLATE_ICON_URL` env var — this
 ///   is how the icon differs between testnet and mainnet without ever hardcoding a URL in this
 ///   source file. With `FROZEN_METADATA` on the icon is the `ICON_URL` constant, for good.
 ///
@@ -47,7 +47,7 @@
 /// immutability is a separate, explicit step: the UpgradeCap is burned by `deploy_token.sh`, or by
 /// `scripts/publish.sh` only with `--confirm-immutable` / an interactive CONFIRM. It is
 /// independent of the supply and metadata policies.
-module sui_token_template::sui_token_template;
+module token_issuance_template::token_issuance_template;
 
 use sui::coin::TreasuryCap;
 #[test_only]
@@ -83,20 +83,20 @@ const FIXED_SUPPLY: bool = true;
 /// `true` → `finalize_and_delete_metadata_cap`.
 const FROZEN_METADATA: bool = false;
 
-/// SUI_TOKEN_TEMPLATE is the type witness — a zero-sized struct that encodes type identity.
+/// TOKEN_ISSUANCE_TEMPLATE is the type witness — a zero-sized struct that encodes type identity.
 /// The struct has no fields and only the `drop` ability (consumed once in `init()`).
 /// Paired with `coin_registry::new_currency_with_otw()`, it creates a
-/// `TreasuryCap<SUI_TOKEN_TEMPLATE>` and a `Currency<SUI_TOKEN_TEMPLATE>` registry entry. The token type
-/// becomes `<PACKAGE_ID>::XMODULENAMEX::SUI_TOKEN_TEMPLATE` globally.
-public struct SUI_TOKEN_TEMPLATE has drop {}
+/// `TreasuryCap<TOKEN_ISSUANCE_TEMPLATE>` and a `Currency<TOKEN_ISSUANCE_TEMPLATE>` registry entry. The token type
+/// becomes `<PACKAGE_ID>::XMODULENAMEX::TOKEN_ISSUANCE_TEMPLATE` globally.
+public struct TOKEN_ISSUANCE_TEMPLATE has drop {}
 
 /// `init()` is called exactly once when the package is published. It initializes the token:
-/// 1. Builds the `Currency<SUI_TOKEN_TEMPLATE>` and `TreasuryCap<SUI_TOKEN_TEMPLATE>` via `coin_registry::new_currency_with_otw`.
+/// 1. Builds the `Currency<TOKEN_ISSUANCE_TEMPLATE>` and `TreasuryCap<TOKEN_ISSUANCE_TEMPLATE>` via `coin_registry::new_currency_with_otw`.
 /// 2. Mints `INITIAL_SUPPLY` to the sender, and either records the supply as fixed in the registry
 ///    (`FIXED_SUPPLY`) or hands the `TreasuryCap` to the sender.
 /// 3. Either deletes the `MetadataCap` (`FROZEN_METADATA`) or hands it to the sender, and transfers
-///    the pending `Currency<SUI_TOKEN_TEMPLATE>` to the registry address.
-fun init(witness: SUI_TOKEN_TEMPLATE, ctx: &mut TxContext) {
+///    the pending `Currency<TOKEN_ISSUANCE_TEMPLATE>` to the registry address.
+fun init(witness: TOKEN_ISSUANCE_TEMPLATE, ctx: &mut TxContext) {
     init_with(witness, INITIAL_SUPPLY, FIXED_SUPPLY, FROZEN_METADATA, ctx);
 }
 
@@ -105,7 +105,7 @@ fun init(witness: SUI_TOKEN_TEMPLATE, ctx: &mut TxContext) {
 /// are init's own (the lint exempts `init` itself, not the function it delegates to).
 #[allow(lint(self_transfer))]
 fun init_with(
-    witness: SUI_TOKEN_TEMPLATE,
+    witness: TOKEN_ISSUANCE_TEMPLATE,
     initial_supply: u64,
     fixed_supply: bool,
     frozen_metadata: bool,
@@ -141,22 +141,22 @@ fun init_with(
 }
 
 #[test_only]
-/// Test-only wrapper around the real `init()`, constructing the `SUI_TOKEN_TEMPLATE` witness
+/// Test-only wrapper around the real `init()`, constructing the `TOKEN_ISSUANCE_TEMPLATE` witness
 /// on the caller's behalf (struct literals are restricted to their defining
 /// module, so external test modules cannot do
 /// this themselves). Mirrors production behavior exactly with the default constants.
-/// `Currency<SUI_TOKEN_TEMPLATE>` is transferred to
+/// `Currency<TOKEN_ISSUANCE_TEMPLATE>` is transferred to
 /// the registry address `@0xc` (retrievable via `take_from_address`/
 /// `return_to_address` in a later transaction — `Currency<T>` has only `key`,
 /// not `store`, so it cannot be shared or transferred from outside `coin_registry`
 /// by any other means).
 public fun test_init(ctx: &mut TxContext) {
-    init(SUI_TOKEN_TEMPLATE {}, ctx);
+    init(TOKEN_ISSUANCE_TEMPLATE {}, ctx);
 }
 
 #[test_only]
 fun test_init_with(initial_supply: u64, fixed_supply: bool, frozen_metadata: bool, ctx: &mut TxContext) {
-    init_with(SUI_TOKEN_TEMPLATE {}, initial_supply, fixed_supply, frozen_metadata, ctx);
+    init_with(TOKEN_ISSUANCE_TEMPLATE {}, initial_supply, fixed_supply, frozen_metadata, ctx);
 }
 
 #[test_only]
@@ -175,15 +175,15 @@ fun constants_are_applied() {
     let mut s = test_scenario::begin(ADMIN);
     test_init(s.ctx());
     s.next_tx(ADMIN);
-    assert!(test_scenario::has_most_recent_for_sender<TreasuryCap<SUI_TOKEN_TEMPLATE>>(&s) == !FIXED_SUPPLY);
-    assert!(test_scenario::has_most_recent_for_sender<MetadataCap<SUI_TOKEN_TEMPLATE>>(&s) == !FROZEN_METADATA);
-    assert!(test_scenario::has_most_recent_for_sender<Coin<SUI_TOKEN_TEMPLATE>>(&s) == (INITIAL_SUPPLY > 0));
+    assert!(test_scenario::has_most_recent_for_sender<TreasuryCap<TOKEN_ISSUANCE_TEMPLATE>>(&s) == !FIXED_SUPPLY);
+    assert!(test_scenario::has_most_recent_for_sender<MetadataCap<TOKEN_ISSUANCE_TEMPLATE>>(&s) == !FROZEN_METADATA);
+    assert!(test_scenario::has_most_recent_for_sender<Coin<TOKEN_ISSUANCE_TEMPLATE>>(&s) == (INITIAL_SUPPLY > 0));
     if (INITIAL_SUPPLY > 0) {
-        let coin = s.take_from_sender<Coin<SUI_TOKEN_TEMPLATE>>();
+        let coin = s.take_from_sender<Coin<TOKEN_ISSUANCE_TEMPLATE>>();
         assert!(coin.value() == INITIAL_SUPPLY);
         s.return_to_sender(coin);
     };
-    let currency = s.take_from_address<Currency<SUI_TOKEN_TEMPLATE>>(REGISTRY);
+    let currency = s.take_from_address<Currency<TOKEN_ISSUANCE_TEMPLATE>>(REGISTRY);
     assert!(currency.is_supply_fixed() == FIXED_SUPPLY);
     assert!(currency.is_metadata_cap_deleted() == FROZEN_METADATA);
     if (FIXED_SUPPLY) assert!(currency.total_supply() == option::some(INITIAL_SUPPLY));
@@ -200,13 +200,13 @@ fun mintable_supply_keeps_the_treasury_cap() {
     let mut s = test_scenario::begin(ADMIN);
     test_init_with(500, false, false, s.ctx());
     s.next_tx(ADMIN);
-    let treasury = s.take_from_sender<TreasuryCap<SUI_TOKEN_TEMPLATE>>();
+    let treasury = s.take_from_sender<TreasuryCap<TOKEN_ISSUANCE_TEMPLATE>>();
     assert!(treasury.total_supply() == 500);
     s.return_to_sender(treasury);
-    let coin = s.take_from_sender<Coin<SUI_TOKEN_TEMPLATE>>();
+    let coin = s.take_from_sender<Coin<TOKEN_ISSUANCE_TEMPLATE>>();
     assert!(coin.value() == 500);
     s.return_to_sender(coin);
-    let currency = s.take_from_address<Currency<SUI_TOKEN_TEMPLATE>>(REGISTRY);
+    let currency = s.take_from_address<Currency<TOKEN_ISSUANCE_TEMPLATE>>(REGISTRY);
     assert!(!currency.is_supply_fixed());
     test_scenario::return_to_address(REGISTRY, currency);
     s.end();
@@ -220,10 +220,10 @@ fun mintable_without_initial_supply_mints_nothing() {
     let mut s = test_scenario::begin(ADMIN);
     test_init_with(0, false, false, s.ctx());
     s.next_tx(ADMIN);
-    let treasury = s.take_from_sender<TreasuryCap<SUI_TOKEN_TEMPLATE>>();
+    let treasury = s.take_from_sender<TreasuryCap<TOKEN_ISSUANCE_TEMPLATE>>();
     assert!(treasury.total_supply() == 0);
     s.return_to_sender(treasury);
-    assert!(!test_scenario::has_most_recent_for_sender<Coin<SUI_TOKEN_TEMPLATE>>(&s));
+    assert!(!test_scenario::has_most_recent_for_sender<Coin<TOKEN_ISSUANCE_TEMPLATE>>(&s));
     s.end();
 }
 
@@ -235,8 +235,8 @@ fun frozen_metadata_deletes_the_metadata_cap() {
     let mut s = test_scenario::begin(ADMIN);
     test_init_with(1, true, true, s.ctx());
     s.next_tx(ADMIN);
-    assert!(!test_scenario::has_most_recent_for_sender<MetadataCap<SUI_TOKEN_TEMPLATE>>(&s));
-    let currency = s.take_from_address<Currency<SUI_TOKEN_TEMPLATE>>(REGISTRY);
+    assert!(!test_scenario::has_most_recent_for_sender<MetadataCap<TOKEN_ISSUANCE_TEMPLATE>>(&s));
+    let currency = s.take_from_address<Currency<TOKEN_ISSUANCE_TEMPLATE>>(REGISTRY);
     assert!(currency.is_metadata_cap_deleted());
     assert!(currency.is_supply_fixed());
     test_scenario::return_to_address(REGISTRY, currency);
@@ -251,11 +251,11 @@ fun mintable_and_updatable_hands_both_caps_to_the_sender() {
     let mut s = test_scenario::begin(ADMIN);
     test_init_with(0, false, false, s.ctx());
     s.next_tx(ADMIN);
-    let treasury = s.take_from_sender<TreasuryCap<SUI_TOKEN_TEMPLATE>>();
+    let treasury = s.take_from_sender<TreasuryCap<TOKEN_ISSUANCE_TEMPLATE>>();
     s.return_to_sender(treasury);
-    let metadata = s.take_from_sender<MetadataCap<SUI_TOKEN_TEMPLATE>>();
+    let metadata = s.take_from_sender<MetadataCap<TOKEN_ISSUANCE_TEMPLATE>>();
     s.return_to_sender(metadata);
-    let currency = s.take_from_address<Currency<SUI_TOKEN_TEMPLATE>>(REGISTRY);
+    let currency = s.take_from_address<Currency<TOKEN_ISSUANCE_TEMPLATE>>(REGISTRY);
     assert!(!currency.is_supply_fixed());
     assert!(!currency.is_metadata_cap_deleted());
     test_scenario::return_to_address(REGISTRY, currency);

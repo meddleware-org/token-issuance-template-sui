@@ -4,14 +4,14 @@ title: Token template — on-chain API reference
 
 # Token template — on-chain API reference
 
-Module `sui_token_template::sui_token_template` (`sources/sui_token_template.move`), Move 2024. In a
+Module `token_issuance_template::token_issuance_template` (`sources/token_issuance_template.move`), Move 2024. In a
 generated package the module, struct and package names are replaced (e.g. `my_token::mytoken::MYTOKEN`).
 
 ## Types
 
 | Type | Abilities | Notes |
 | --- | --- | --- |
-| `SUI_TOKEN_TEMPLATE` | `drop` | One-time witness; the coin type is `<PACKAGE_ID>::<module>::SUI_TOKEN_TEMPLATE` |
+| `TOKEN_ISSUANCE_TEMPLATE` | `drop` | One-time witness; the coin type is `<PACKAGE_ID>::<module>::TOKEN_ISSUANCE_TEMPLATE` |
 
 ## Constants (patch points)
 

@@ -62,7 +62,7 @@ This automatically:
 ├── Move.toml                  # Template manifest
 ├── Move.lock                  # Pins the framework revision (carried into generated packages)
 ├── sources/
-│   └── sui_token_template.move     # Template source with inline tests and placeholders
+│   └── token_issuance_template.move     # Template source with inline tests and placeholders
 ├── scripts/
 │   ├── 03_create_token.sh         # Generator: template → concrete instance
 │   ├── deploy_token.sh            # Full deployment pipeline
@@ -78,8 +78,8 @@ This automatically:
 
 The template uses **placeholder values** (buildable, not sentinels):
 
-- `sui_token_template` — generic module/package name (valid Move identifier)
-- `SUI_TOKEN_TEMPLATE` — generic struct name
+- `token_issuance_template` — generic module/package name (valid Move identifier)
+- `TOKEN_ISSUANCE_TEMPLATE` — generic struct name
 - `0u8` — decimals placeholder
 - `b"TEMPLATE"` — string placeholders (symbol, name, description, icon URL)
 
@@ -112,8 +112,8 @@ my_token/
 
 | Aspect | Template | Concrete Instance |
 | --- | --- | --- |
-| Module name | `sui_token_template::sui_token_template` | `<TOKEN_PACKAGE_NAME>::<TOKEN_MODULE_NAME>` |
-| Struct name | `SUI_TOKEN_TEMPLATE` | `<TOKEN_STRUCT_NAME>` |
+| Module name | `token_issuance_template::token_issuance_template` | `<TOKEN_PACKAGE_NAME>::<TOKEN_MODULE_NAME>` |
+| Struct name | `TOKEN_ISSUANCE_TEMPLATE` | `<TOKEN_STRUCT_NAME>` |
 | Decimals | `0u8` | Actual value (e.g., `9`) |
 | Symbol | `b"TEMPLATE"` | Actual value (e.g., `b"myTOKEN"`) |
 | Icon URL | `b"TEMPLATE"` | Actual Walrus blob URL |
@@ -151,14 +151,14 @@ TOKEN_ICON_URL             # Walrus blob URL or empty string (can be set later)
 
 1. Validates all 8 env vars are set and non-empty (using bash `${VAR:?msg}` expansion).
 2. Creates output directory and subdirectories.
-3. Copies template `Move.toml` and `sources/sui_token_template.move` to output.
+3. Copies template `Move.toml` and `sources/token_issuance_template.move` to output.
 4. Performs sed-based substitutions (template unchanged):
-   - Module path: `sui_token_template::sui_token_template` → `$TOKEN_PACKAGE_NAME::$TOKEN_MODULE_NAME`
-   - Struct: `SUI_TOKEN_TEMPLATE` → `$TOKEN_STRUCT_NAME`
+   - Module path: `token_issuance_template::token_issuance_template` → `$TOKEN_PACKAGE_NAME::$TOKEN_MODULE_NAME`
+   - Struct: `TOKEN_ISSUANCE_TEMPLATE` → `$TOKEN_STRUCT_NAME`
    - Decimals: `0u8` → `$TOKEN_DECIMALS`
    - Strings: `b"TEMPLATE"` → `b"$TOKEN_SYMBOL"`, etc. (4 occurrences in order)
-5. Renames `sui_token_template.move` → `$TOKEN_MODULE_NAME.move`.
-6. Validates no `sui_token_template` identifier remains (catches incomplete substitution).
+5. Renames `token_issuance_template.move` → `$TOKEN_MODULE_NAME.move`.
+6. Validates no `token_issuance_template` identifier remains (catches incomplete substitution).
 7. Prints summary and ready-to-publish reminder.
 
 **Exit codes:**
@@ -264,7 +264,7 @@ The script runs 8 phases, each with clear output and error handling:
 
 #### Phase 7: Hand over the supply authority
 
-- Runs `sui client transfer --object-id <id> --to $TREASURY_ADDRESS --gas-budget 10000000` for the TreasuryCap (if one exists) and for the initial supply coin (if one exists), after one typed confirmation, and re-reads each owner from the chain.
+- Runs `sui client transfer --object-id <id> --to $TREASURY_ADDRESS --gas-budget 10000000` for the TreasuryCap (if one exists), the MetadataCap (if the metadata is updatable: it goes with the TreasuryCap, so whoever controls the supply also controls the description and icon; audit OQ2) and the initial supply coin (if one exists), after one typed confirmation, and re-reads each owner from the chain.
 - **Critical error handling:** If transfer fails after successful publish, prints:
   - Error message
   - TreasuryCap object ID
@@ -313,7 +313,7 @@ CLI (workspace decision D23):
 
 | File | Content |
 | --- | --- |
-| `bytecode/sui_token_template.mv` | `sui move build --build-env testnet` output (publishable; never the instrumented `sui move test` bytecode) |
+| `bytecode/token_issuance_template.mv` | `sui move build --build-env testnet` output (publishable; never the instrumented `sui move test` bytecode) |
 | `bytecode/build-info.json` | `toolchainVersion`, `buildEnv`, `frameworkRev` (from `Move.lock`), `sourceSha256`, `moduleSha256` |
 
 Both are exported (`@meddleware/token-issuance-template-sui/bytecode/…`). `Move.lock` is committed so the
@@ -323,7 +323,7 @@ a newer framework: delete `Move.lock`, rebuild, review, commit. `Move.lock` also
 
 ### Package layout contract (what consumers may read)
 
-`package.json` `exports` exposes only `./package.json`, `./bytecode/sui_token_template.mv` and
+`package.json` `exports` exposes only `./package.json`, `./bytecode/token_issuance_template.mv` and
 `./bytecode/build-info.json`. Everything else is shipped by the `files` whitelist and is **read by path**
 from the package directory (`require.resolve('@meddleware/token-issuance-template-sui/package.json')`, then the
 directory). Consumers (today `@meddleware/token-issuance-client`'s `gen-template.mjs`) may rely on these paths
@@ -331,8 +331,8 @@ for the lifetime of the major version, and a change to any of them is a breaking
 
 | Path | Contract |
 | --- | --- |
-| `bytecode/sui_token_template.mv`, `bytecode/build-info.json` | exported; `build-info.json` keys: `toolchainVersion`, `buildEnv`, `frameworkRev`, `sourceSha256`, `moduleSha256` |
-| `sources/sui_token_template.move` | the one Move source; its patchable constants and placeholder identifiers are the wire format with the client |
+| `bytecode/token_issuance_template.mv`, `bytecode/build-info.json` | exported; `build-info.json` keys: `toolchainVersion`, `buildEnv`, `frameworkRev`, `sourceSha256`, `moduleSha256` |
+| `sources/token_issuance_template.move` | the one Move source; its patchable constants and placeholder identifiers are the wire format with the client |
 | `templates/` | the files copied or substituted into a generated package (`publish.sh`, `README.md`, `CLAUDE.md`, `AGENTS.md`, `deployments.md`, `gitignore`, `LICENSE-0BSD`) and their `X…X` placeholders |
 | `Move.toml`, `Move.lock` | the manifest and the framework pin a generated package starts from |
 | `scripts/` | the generators and the pipeline; read by operators, not imported |
@@ -340,23 +340,23 @@ for the lifetime of the major version, and a change to any of them is a breaking
 `docs/audit/` is not shipped. `token-issuance-client`'s `check:template` (hashes against `build-info.json`) is the
 drift detector.
 
-## Template Source (`sources/sui_token_template.move`)
+## Template Source (`sources/token_issuance_template.move`)
 
 ### Structure
 
 The template uses the **one-time-witness (OTW) pattern** for type identity and the Sui coin registry for immutable metadata:
 
 ```move
-module sui_token_template::sui_token_template;
+module token_issuance_template::token_issuance_template;
 
 use sui::coin::TreasuryCap;
 use sui::coin_registry;
 
 // Type witness: zero-sized struct with drop ability only.
 // Consumed once in init(); burned by the coin registry.
-public struct SUI_TOKEN_TEMPLATE has drop {}
+public struct TOKEN_ISSUANCE_TEMPLATE has drop {}
 
-fun init(witness: SUI_TOKEN_TEMPLATE, ctx: &mut TxContext) {
+fun init(witness: TOKEN_ISSUANCE_TEMPLATE, ctx: &mut TxContext) {
     // (abridged: init delegates to init_with(INITIAL_SUPPLY, FIXED_SUPPLY, FROZEN_METADATA))
     let (mut builder, mut treasury_cap) = coin_registry::new_currency_with_otw(
         witness, DECIMALS, SYMBOL.to_string(), NAME.to_string(),
@@ -371,8 +371,8 @@ fun init(witness: SUI_TOKEN_TEMPLATE, ctx: &mut TxContext) {
     if (FIXED_SUPPLY) builder.make_supply_fixed(treasury_cap)
     else transfer::public_transfer(treasury_cap, ctx.sender());
 
-    // FROZEN_METADATA: the MetadataCap is deleted (nothing can ever change). Otherwise the deployer
-    // keeps it and description + icon remain governance-updatable.
+    // FROZEN_METADATA: the MetadataCap is deleted (nothing can ever change). Otherwise the publisher
+    // receives it (deploy_token.sh then hands it to the treasury with the TreasuryCap).
     if (FROZEN_METADATA) builder.finalize_and_delete_metadata_cap(ctx)
     else transfer::public_transfer(builder.finalize(ctx), ctx.sender());
 }
@@ -396,12 +396,12 @@ audit's capability matrix. The policy is chosen when the package is generated
 
 #### 2. One-Time Witness Pattern
 
-The `SUI_TOKEN_TEMPLATE` struct is a **type witness** — a zero-sized struct that encodes type identity at compile time. It:
+The `TOKEN_ISSUANCE_TEMPLATE` struct is a **type witness** — a zero-sized struct that encodes type identity at compile time. It:
 
 - Can only be instantiated when the package is published (`init()`).
 - Can only be used once (has `drop` ability only).
 - Binds the token type to this specific package ID.
-- Prevents unauthorized minting (no other package can create `SUI_TOKEN_TEMPLATE`).
+- Prevents unauthorized minting (no other package can create `TOKEN_ISSUANCE_TEMPLATE`).
 
 #### 3. Placeholder Values
 
@@ -732,7 +732,7 @@ definitely consumed (a "not found" for that object), never because a lookup fail
 
 **If you need custom fields or functions:**
 
-1. Create a companion package that imports `sui_token_template::...::SUI_TOKEN_TEMPLATE`.
+1. Create a companion package that imports `token_issuance_template::...::TOKEN_ISSUANCE_TEMPLATE`.
 2. Keep the token package pristine.
 
 ### Scenario: You want to support multiple token types
@@ -741,7 +741,7 @@ definitely consumed (a "not found" for that object), never because a lookup fail
 
 ```text
 [parent_directory]/
-├── sui_token_template/              # Generic template (never deployed)
+├── token_issuance_template/              # Generic template (never deployed)
 ├── my_token/                # Concrete instance #1
 ├── myusdc_token/                # Concrete instance #2
 └── ...

@@ -1,9 +1,9 @@
 [package]
 edition = "2024"
-name = "sui_token_template"
+name = "token_issuance_template"
 version = "1.0.0"
 license = "0BSD"
 
 
 [addresses]
-sui_token_template = "0x0"
+token_issuance_template = "0x0"

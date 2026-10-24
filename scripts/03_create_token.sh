@@ -168,7 +168,7 @@ if [[ "$TOKEN_METADATA_POLICY" == "frozen" ]]; then FROZEN_METADATA_LITERAL="tru
 # Locate template directory (script's parent directory)
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 TEMPLATE_DIR="$SCRIPT_DIR/.."
-TEMPLATE_MOVE="$TEMPLATE_DIR/sources/sui_token_template.move"
+TEMPLATE_MOVE="$TEMPLATE_DIR/sources/token_issuance_template.move"
 TEMPLATE_TOML="$TEMPLATE_DIR/Move.toml"
 TEMPLATE_LOCK="$TEMPLATE_DIR/Move.lock"
 
@@ -271,19 +271,19 @@ set_line() {
 }
 
 # Copy Move.toml and substitute package name (an identifier, validated above) and licence id
-sed "s/sui_token_template/$TOKEN_PACKAGE_NAME/g" "$TEMPLATE_TOML" > "$STAGE/Move.toml"
+sed "s/token_issuance_template/$TOKEN_PACKAGE_NAME/g" "$TEMPLATE_TOML" > "$STAGE/Move.toml"
 sed -i "s|^license = .*|license = \"$SPDX_ID\"|" "$STAGE/Move.toml"
 cp "$TEMPLATE_LOCK" "$STAGE/Move.lock"
 
 # Move.lock: pins the framework revision the template was built and tested with (F7), so the generated
 # package builds against the same framework. Only the root package's pin carries the template name; the
 # line is replaced whole. An existing instance keeps its own lock (see the install step).
-set_line "$STAGE/Move.lock" '[pinned.testnet.sui_token_template]' "[pinned.testnet.$TOKEN_PACKAGE_NAME]"
+set_line "$STAGE/Move.lock" '[pinned.testnet.token_issuance_template]' "[pinned.testnet.$TOKEN_PACKAGE_NAME]"
 
 # publish.sh (identifiers only)
 cp "$TEMPLATE_PUBLISH" "$STAGE/scripts/publish.sh"
 chmod +x "$STAGE/scripts/publish.sh"
-sed -i "s/SUI_TOKEN_TEMPLATE/$TOKEN_STRUCT_NAME/g" "$STAGE/scripts/publish.sh"
+sed -i "s/TOKEN_ISSUANCE_TEMPLATE/$TOKEN_STRUCT_NAME/g" "$STAGE/scripts/publish.sh"
 sed -i "s|XMODULENAMEX|$TOKEN_MODULE_NAME|g" "$STAGE/scripts/publish.sh"
 sed -i "s|XPACKAGENAMEX|$TOKEN_PACKAGE_NAME|g" "$STAGE/scripts/publish.sh"
 sed -i "s|XMETADATAPOLICYX|$TOKEN_METADATA_POLICY|g" "$STAGE/scripts/publish.sh"
@@ -352,8 +352,8 @@ else
     sed -i "1s|^// SPDX-License-Identifier:.*|// SPDX-License-Identifier: $SPDX_ID|" "$SRC"
     sed -i "2s|^//.*|// Licensed under the $SPDX_ID license; see the LICENSE file.|" "$SRC"
 fi
-sed -i "s/module sui_token_template::sui_token_template;/module $TOKEN_PACKAGE_NAME::$TOKEN_MODULE_NAME;/g" "$SRC"
-sed -i "s/SUI_TOKEN_TEMPLATE/$TOKEN_STRUCT_NAME/g" "$SRC"
+sed -i "s/module token_issuance_template::token_issuance_template;/module $TOKEN_PACKAGE_NAME::$TOKEN_MODULE_NAME;/g" "$SRC"
+sed -i "s/TOKEN_ISSUANCE_TEMPLATE/$TOKEN_STRUCT_NAME/g" "$SRC"
 subst_tokens "$SRC" "PACKAGEDESCRIPTION=$TOKEN_PACKAGE_DESCRIPTION" "MODULENAME=$TOKEN_MODULE_NAME"
 set_line "$SRC" 'const DECIMALS: u8 = 9;' "const DECIMALS: u8 = ${TOKEN_DECIMALS};"
 set_line "$SRC" 'const SYMBOL: vector<u8> = b"TEMPLATE_SYMBOL";' "const SYMBOL: vector<u8> = b\"${TOKEN_SYMBOL}\";"
@@ -367,10 +367,10 @@ set_line "$SRC" 'const FROZEN_METADATA: bool = false;' "const FROZEN_METADATA: b
 # ─────────────────────────────────────────────────────────────────────────────
 # Post-generation checks, all on the staging copy. A failure here leaves OUTPUT_DIR untouched.
 # ─────────────────────────────────────────────────────────────────────────────
-! grep -q "sui_token_template" "$SRC" || fail "Template identifier 'sui_token_template' still present in generated source. Substitution failed."
-! grep -q "sui_token_template" "$STAGE/Move.lock" || fail "Template identifier 'sui_token_template' still present in Move.lock. Substitution failed."
-! grep -q "sui_token_template" "$STAGE/Move.toml" || fail "Template identifier 'sui_token_template' still present in Move.toml. Substitution failed."
-! grep -q "SUI_TOKEN_TEMPLATE" "$STAGE/scripts/publish.sh" || fail "Template identifier 'SUI_TOKEN_TEMPLATE' still present in generated publish.sh. Substitution failed."
+! grep -q "token_issuance_template" "$SRC" || fail "Template identifier 'token_issuance_template' still present in generated source. Substitution failed."
+! grep -q "token_issuance_template" "$STAGE/Move.lock" || fail "Template identifier 'token_issuance_template' still present in Move.lock. Substitution failed."
+! grep -q "token_issuance_template" "$STAGE/Move.toml" || fail "Template identifier 'token_issuance_template' still present in Move.toml. Substitution failed."
+! grep -q "TOKEN_ISSUANCE_TEMPLATE" "$STAGE/scripts/publish.sh" || fail "Template identifier 'TOKEN_ISSUANCE_TEMPLATE' still present in generated publish.sh. Substitution failed."
 ! grep -qE 'X[A-Z_]+X' "$STAGE/scripts/publish.sh" || fail "Unreplaced X...X placeholder in generated publish.sh. Substitution incomplete."
 # README, deployments.md, CLAUDE.md, AGENTS.md, LICENSE, and the doc tokens of the source were checked for
 # unmapped template placeholders by subst_tokens itself (a user value that looks like a token is fine: it

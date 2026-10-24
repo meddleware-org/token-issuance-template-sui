@@ -1,6 +1,6 @@
 {
   "name": "@meddleware/token-issuance-template-sui",
-  "version": "1.0.10",
+  "version": "1.0.11",
   "private": false,
   "type": "module",
   "author": "MeddleWare <dev@meddleware.co.uk>",
@@ -24,7 +24,7 @@
   },
   "exports": {
     "./package.json": "./package.json",
-    "./bytecode/sui_token_template.mv": "./bytecode/sui_token_template.mv",
+    "./bytecode/token_issuance_template.mv": "./bytecode/token_issuance_template.mv",
     "./bytecode/build-info.json": "./bytecode/build-info.json"
   },
   "files": [
