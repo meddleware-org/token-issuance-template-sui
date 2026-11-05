@@ -6,11 +6,11 @@ shell generator and the deployment pipeline (Sui Move + shell).
 **Project type:** Move package
 **Template:**
 
-- AUDIT_TEMPLATE.md (2026-10-08)
+- AUDIT_TEMPLATE.md (2026-11-01)
 - AUDIT_TEMPLATE_SUI.md (2026-09-28)
 - AUDIT_TEMPLATE_OPS.md (2026-10-08) — applied since 2026-10-03: `scripts/` and `templates/publish.sh`
   sign on testnet and mainnet and perform irreversible steps
-- AUDIT_TEMPLATE_TS.md (2026-10-08) — npm-package rows only (B.TS-1/2/3, TS-M7/M8): the package is
+- AUDIT_TEMPLATE_TS.md (2026-11-01) — npm-package rows only (B.TS-1/2/3, TS-M7/M8): the package is
   published to npm but ships no TypeScript (applied 2026-10-09; the README applicability matrix lists
   it as partial)
 
@@ -51,7 +51,7 @@ uses the `walrus` CLI; noted under OPS), AUTH, IMG (no image), SITE.
 - No testnet or mainnet coin is recorded here: coins generated from this template belong to their
   deployers.
 
-**Review date:** 2026-10-03 (third pass; previous passes 2026-09-28) · re-verified 2026-10-09 · fix wave 2026-10-10 · release status 2026-10-18
+**Review date:** 2026-10-03 (third pass; previous passes 2026-09-28) · re-verified 2026-10-09 · fix wave 2026-10-10 · release status 2026-10-18; frontend-wave delta review 2026-11-01 (real review of the 2026-10-19 → 2026-11-01 changes; see the delta section)
 **Reviewer:** Internal review
 **Severity ceiling:** Medium.
 
@@ -136,6 +136,8 @@ registry.** Every finding from the third pass is closed except two residual Info
 - `deploy_token.sh` end to end on testnet: **run 2026-10-22, passed** (S1; evidence in the re-verification log). The gate is closed; it is repeated before each template release.
 
 ---
+
+**2026-11-01 update.** This package was not part of the 2026-10-30 release wave; this review re-ran its Move tests on 1.0.11 and found nothing to fix (F25, Positive).
 
 ## Threat model / trust boundaries
 
@@ -892,6 +894,18 @@ that workflow, so a tag is gated on it too. Local run: `found 0 vulnerabilities`
 
 ---
 
+### Frontend wave delta review (2026-11-01) — 1.0.11 reviewed
+
+Scope: the changes since the last substantive entry of this audit: 1.0.11 (2026-10-24: renamed to `token_issuance_template`; `MetadataCap` to the recipient, OQ2 — both logged); no change in the 2026-10-30 wave. This package took no part in the 2026-10-30 release wave (no commit after 2026-10-24); this section is the first review since the rename and the `MetadataCap` change, which were logged on 2026-10-24, and re-ran this repository's gates. Ran: `sui move test` with Sui 1.81.0: 6 tests, 6 passed; no commit since 2026-10-24.
+
+### F25 — Positive: the refreshed release passes its own gates, with nothing changed in the shipped logic
+**Severity:** Positive
+**Evidence:** the template compiles and its tests pass; the generated-coin manifest version policy (D49) is unchanged.
+
+### Delta notes
+- **A11Y lens:** Move package and template: not triggered.
+- **Supply chain:** published through the tag-gated trusted-publisher workflow with provenance (unchanged); Dependabot configuration present.
+
 ## Section A — Invariant verification matrix
 
 | # | Invariant | Enforced / asserted at | Proven by | Status |
@@ -1274,3 +1288,4 @@ only. Counts at 2026-10-10 (1.0.9, commit `1faa903`): 6 passed; **67 passed, 0 f
   - **Disposition:** the Section D box is ticked; OQ7 gets the evidence and a recommendation (still open, a product choice); no finding was opened or changed and no script bug was found. Not exercised: the mintable/updatable options (they are covered by the localnet `publish.sh` runs and token-issuance-client's testnet e2e), mainnet, and the `alreadyCertified` branch of the Walrus upload.
 - 2026-10-24 — repository renamed from `sui-token-template` to `token-issuance-template-sui` (workspace naming convention, `docs/architecture/ADR-0003-naming.md`): package, image, host and path names updated throughout. No finding, disposition or evidence changed.
 - 2026-10-24 — identifier alignment (`docs/architecture/ADR-0004-identifier-alignment.md`): template package/module/witness `token_issuance_template` / `TOKEN_ISSUANCE_TEMPLATE`; bytecode rebuilt (same toolchain and framework rev); 6 Move + 67 generator tests pass. OQ2 implemented: `deploy_token.sh` hands the `MetadataCap` to the recipient with the `TreasuryCap` (and records `TOKEN_METADATA_CAP_OWNER`); README custody text updated.
+- 2026-11-01 — frontend-wave delta review of 1.0.11: read the 10-30 release diff (no source change) and re-ran the gates (see the delta section); recorded F25 as Positive. `**Template:**` dates reconciled to the 2026-11-01 registry with no disposition change.
