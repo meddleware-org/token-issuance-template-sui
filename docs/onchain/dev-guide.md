@@ -54,3 +54,12 @@ Each step saves IDs to `.env.<network>`; re-running resumes (no second publish).
 - Metadata: `client.getCoinMetadata({ coinType })` (gRPC) returns the registry `Currency`.
 - Minting (`0x2::coin::mint`) and burning (`0x2::coin::burn`) require the `TreasuryCap`. A coin with
   a fixed supply has none: `Currency<T>` reports `is_supply_fixed` and `total_supply` instead.
+
+## Command-line deployment paths
+
+Besides the Token Issuance app, a coin package can be built and published from this repository:
+
+| Path | Registration | Supply / metadata policy | UpgradeCap |
+| --- | --- | --- | --- |
+| `deploy_token.sh` (CLI) | finalized | same constants (`TOKEN_INITIAL_SUPPLY`, `TOKEN_SUPPLY_POLICY`, `TOKEN_METADATA_POLICY`); the TreasuryCap (if any) and the initial supply go to `TREASURY_ADDRESS`; the MetadataCap (if any) stays with the deployer | always burned |
+| generated `scripts/publish.sh` | finalized; icon set per network unless the metadata is frozen | what remains stays with the deployer | burned only with `--confirm-immutable` / `CONFIRM` |

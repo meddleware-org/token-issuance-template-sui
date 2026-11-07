@@ -5,8 +5,8 @@ title: Token template — on-chain overview
 # Token template — on-chain overview
 
 `token_issuance_template` is the Move source every Meddleware-generated **Sui coin** is built from. The
-Token Issuance (browser) and the `deploy_token.sh` pipeline (CLI) turn it into a concrete, standalone
-coin package: one package per coin, with its own coin type `<PACKAGE_ID>::<module>::<STRUCT>`.
+Token Issuance app turns it into a concrete, standalone
+coin package (developers can also build one from the command line: see the developer guide): one package per coin, with its own coin type `<PACKAGE_ID>::<module>::<STRUCT>`.
 
 ## What a generated coin package does on-chain
 
@@ -40,13 +40,11 @@ beyond `init` is done with the Sui framework's own functions by whoever holds th
 | `UpgradeCap` | replace the package code | **burned** (package made immutable) |
 | `Currency<T>` | the registry record (shared) | the coin registry |
 
-## Deployment paths
+## How a coin is deployed
 
 | Path | Registration | Supply / metadata policy | UpgradeCap |
 | --- | --- | --- | --- |
-| Token Issuance (browser) | finalized in a second transaction | applied by `init` at publish (`INITIAL_SUPPLY`, `FIXED_SUPPLY`, `FROZEN_METADATA`); the second transaction only registers the currency and moves what remains to the recipient | burned (default) or kept, per your choice |
-| `deploy_token.sh` (CLI) | finalized | same constants (`TOKEN_INITIAL_SUPPLY`, `TOKEN_SUPPLY_POLICY`, `TOKEN_METADATA_POLICY`); the TreasuryCap (if any) and the initial supply go to `TREASURY_ADDRESS`; the MetadataCap (if any) stays with the deployer | always burned |
-| generated `scripts/publish.sh` | finalized; icon set per network unless the metadata is frozen | what remains stays with the deployer | burned only with `--confirm-immutable` / `CONFIRM` |
+| Token Issuance app | finalized in a second transaction | applied by `init` at publish (`INITIAL_SUPPLY`, `FIXED_SUPPLY`, `FROZEN_METADATA`); the second transaction only registers the currency and moves what remains to the recipient | burned (default) or kept, per your choice |
 
-The operator fee charged by the Token Issuance is part of that app's publish transaction, not of the
+The platform fee charged by the Token Issuance app is part of that app's publish transaction, not of the
 coin package.
