@@ -18,3 +18,5 @@ client.yaml
 .idea/
 *.swp
 *.swo
+.coverage_map.mvcov
+traces/

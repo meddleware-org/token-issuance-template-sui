@@ -43,8 +43,15 @@ jobs:
           have=$(sui --version | awk '{print $2}' | cut -d- -f1)
           [ "${want%.*}" = "${have%.*}" ] || { echo "build-info.json says $want, CI runs $have"; exit 1; }
 
-      - name: Build and test
-        run: sui move test --build-env testnet
+      - name: Build (lints on, warnings are errors)
+        run: sui move build --build-env testnet --lint --warnings-are-errors
+
+      - name: Test with coverage (every module at 100%)
+        run: |
+          sui move test --build-env testnet --coverage
+          sui move coverage summary | tee "$RUNNER_TEMP/coverage.txt"
+          grep -q "% Module coverage:" "$RUNNER_TEMP/coverage.txt"
+          awk '/% Module coverage:/ { if ($NF + 0 < 100) bad = 1 } END { exit bad }' "$RUNNER_TEMP/coverage.txt"
 
       # D23: the shipped bytecode must equal a fresh build with the pinned CLI and Move.lock.
       - name: Shipped bytecode matches a fresh build
