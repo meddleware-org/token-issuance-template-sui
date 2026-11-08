@@ -3,6 +3,12 @@
 All notable changes to `@meddleware/token-issuance-template-sui` are documented here.
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [1.0.14] - 2026-11-08
+
+### Fixed
+
+- The generated package guides (CLAUDE.md, AGENTS.md) list the name among the fields the `MetadataCap` holder can change.
+
 ## [1.0.13] - 2026-11-08
 
 ### Fixed

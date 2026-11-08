@@ -39,8 +39,8 @@ updatable metadata, `scripts/publish.sh` then sets the network-specific value fr
 | Coin metadata (gRPC `getCoinMetadata`) | Returns the registry `Currency` once `finalize_registration` has run |
 | Supply policy | `XSUPPLYPOLICYX` — a fixed supply is recorded in the registry (`is_supply_fixed`) and has no `TreasuryCap` |
 | Metadata policy | `XMETADATAPOLICYX` — frozen metadata is recorded in the registry (`is_metadata_cap_deleted`) and has no `MetadataCap` |
-| **Immutable fields** | Name, symbol, decimals (and description and icon URL when the metadata is frozen) |
-| **Mutable fields** | Description, icon URL (only while a `MetadataCap` exists) |
+| **Immutable fields** | Symbol, decimals (and name, description and icon URL when the metadata is frozen) |
+| **Mutable fields** | Name, description, icon URL (only while a `MetadataCap` exists) |
 
 ## Verification
 
