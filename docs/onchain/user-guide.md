@@ -9,7 +9,7 @@ explains what that coin can do afterwards, who controls it, and the choices that
 
 ## Permanent from the moment you publish
 
-- **Name, symbol and decimals** can never change.
+- **Symbol and decimals** can never change. The **name**, description and icon can be changed by whoever holds the `MetadataCap`, unless you chose frozen metadata (then nothing about the coin's metadata can ever change).
 - The **coin type** (`<package>::<module>::<STRUCT>`) is fixed — a new coin always means a new
   package and a new type.
 - If the package is made **immutable** (the default), its code can never change.

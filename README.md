@@ -681,11 +681,11 @@ The returned object ID is needed for lifetime monitoring. Update your deployment
 
 ### Can I Update Token Metadata After Deployment?
 
-**Partly.** Name, symbol and decimals are permanently fixed by the coin registry. Description and
-icon URL can be changed by the holder of the `MetadataCap` (e.g. `coin_registry::set_icon_url`) —
+**Partly.** Symbol and decimals are permanently fixed by the coin registry. Name, description and
+icon URL can be changed by the holder of the `MetadataCap` (e.g. `coin_registry::set_name`, `set_icon_url`) —
 unless it has been deleted or frozen, after which all metadata is immutable.
 
-**If you need to change name, symbol or decimals (or metadata after the `MetadataCap` is gone):**
+**If you need to change symbol or decimals (or any metadata after the `MetadataCap` is gone):**
 
 1. Deploy a new token package (new package ID).
 2. Migrate downstream packages to use the new token type.

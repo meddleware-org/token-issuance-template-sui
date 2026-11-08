@@ -2,6 +2,6 @@
   "toolchainVersion": "1.81.0",
   "buildEnv": "testnet",
   "frameworkRev": "83f11dc85d5695a57894329b005b78d75f9bb059",
-  "sourceSha256": "8f00e2b03c7b03ceb36677907bdb8b8f9c41b2e03a99b11791957c35a51ea44d",
+  "sourceSha256": "2f00d37389ce7a58a6110425da2b0d1f733753ba4d0091a5d1292683e93ff974",
   "moduleSha256": "da2cea816e4e3393c18bff7ebeaeee6de51972b8bccf95b8d65351386b41d667"
 }

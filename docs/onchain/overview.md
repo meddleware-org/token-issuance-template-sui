@@ -13,7 +13,8 @@ coin package (developers can also build one from the command line: see the devel
 It contains exactly one function that ever runs on its own — `init`, once, at publish:
 
 1. Registers the coin with the Sui **coin registry** (`coin_registry::new_currency_with_otw`), fixing
-   its **decimals, symbol and name forever**, and setting its description and icon URL.
+   its **decimals and symbol forever**, and setting its name, description and icon URL (the name, description and icon stay changeable by the
+   `MetadataCap` holder unless metadata is frozen).
 2. Mints the **initial supply** (`INITIAL_SUPPLY`, possibly 0) to the publisher and applies the
    **supply policy**: a *fixed* supply is handed to the registry (`make_supply_fixed`), so no
    `TreasuryCap` exists and the registry reports the supply as fixed; a *mintable* supply sends the

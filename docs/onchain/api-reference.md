@@ -19,7 +19,7 @@ generated package the module, struct and package names are replaced (e.g. `my_to
 | --- | --- | --- |
 | `DECIMALS: u8` | `9` | Decimals (fixed forever after publish) |
 | `SYMBOL` | `b"TEMPLATE_SYMBOL"` | Symbol (fixed forever) |
-| `NAME` | `b"TEMPLATE_NAME"` | Name (fixed forever) |
+| `NAME` | `b"TEMPLATE_NAME"` | Name (changeable with the `MetadataCap` until metadata is frozen) |
 | `DESCRIPTION` | `b"TEMPLATE_DESCRIPTION"` | Description (editable with `MetadataCap`) |
 | `ICON_URL` | `b"TEMPLATE_ICON_URL"` | Icon URL (editable with `MetadataCap`) |
 | `INITIAL_SUPPLY: u64` | `1_000_000_007` | Raw units minted to the publisher in `init` (0 = none) |
@@ -62,4 +62,4 @@ registry operations use framework functions:
 - No authority other than the (at most two) capabilities is created or retained by the package.
 - A fixed supply is never mintable: the `TreasuryCap` is consumed by `make_supply_fixed` in `init`.
 - `init` aborts (the publish fails, nothing exists) if the supply is fixed and `INITIAL_SUPPLY` is 0.
-- Name, symbol and decimals are immutable in the registry.
+- Symbol and decimals are immutable in the registry. Name, description and icon URL are changeable by the `MetadataCap` holder until the cap is deleted (frozen metadata).

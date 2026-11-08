@@ -7,9 +7,10 @@
 ///
 /// Defines the `TOKEN_ISSUANCE_TEMPLATE` type witness and initializes the token via the modern
 /// `coin_registry::new_currency_with_otw` pattern (the framework's documented
-/// replacement for deprecated `coin::create_currency`). Name, symbol, and decimals
-/// are permanently immutable. Description and icon URL remain updatable via
-/// governance entry points, using a `MetadataCap<TOKEN_ISSUANCE_TEMPLATE>` rather than the `TreasuryCap`.
+/// replacement for deprecated `coin::create_currency`). Symbol and decimals
+/// are permanently immutable. Name, description and icon URL remain updatable via
+/// governance entry points, using a `MetadataCap<TOKEN_ISSUANCE_TEMPLATE>` rather than the `TreasuryCap`,
+/// until that cap is deleted (frozen metadata).
 ///
 /// ## Key Types
 ///

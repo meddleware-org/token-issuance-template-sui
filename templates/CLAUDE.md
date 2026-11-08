@@ -66,6 +66,6 @@ Currency object, Walrus blob).
 - Do not manually edit `sources/XMODULENAMEX.move`. If regeneration is needed, use `create_token.sh`
   from the `token-issuance-template-sui` scripts. The icon URL is never hardcoded here — it is
   supplied per-network via the `XSTRUCTNAMEX_ICON_URL` env var consumed by `scripts/publish.sh`.
-- With the `updatable` metadata policy, description and icon URL may be updated post-deploy via
-  `MetadataCap` (governance-gated). Name, symbol, and decimals are permanently fixed.
+- With the `updatable` metadata policy, name, description and icon URL may be updated post-deploy via
+  `MetadataCap` (governance-gated). Symbol and decimals are permanently fixed.
 - Refer to `token-issuance-template-sui/CLAUDE.md` for template-level guidance.
