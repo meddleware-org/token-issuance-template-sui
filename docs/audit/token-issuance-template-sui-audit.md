@@ -1063,7 +1063,7 @@ only. Counts at 2026-10-10 (1.0.9, commit `1faa903`): 6 passed; **67 passed, 0 f
 - [ ] documented custody for `TreasuryCap` / `MetadataCap` per token (OQ2) — decided 2026-10-22 (both caps go to the recipient); the script and README change land in the next release
 - [x] `Move.lock` shipped and carried into generated packages — F7 (RESOLVED: 1.0.9, commit `1faa903` for the
   npm package and `03_create_token.sh`; token-issuance-client 0.0.11, commit `994b951`, for the packages it renders)
-- [ ] external audit of the template and generators — maintainer item (mainnet)
+- [ ] external audit of the template and generators (ADR-0009 gate G2 for the Move template; FU-0018) — maintainer item
 
 ---
 
