@@ -8,15 +8,15 @@ This package is a **generic Sui coin template and deployment system**. It is not
 
 **What it is:**
 
-- A reusable template for generating Sui coin packages with immutable on-chain metadata.
+- A reusable template for generating Sui coin packages with a fixed code identity and a supply and metadata policy chosen at generation.
 - A complete deployment pipeline (Walrus upload → generation → build → test → publish → governance transfer).
 - A foundation for any coin type an application needs (e.g. a share token, governance token, or stablecoin).
 
 **What it is not:**
 
 - A standalone coin system. All minting/burning logic lives in the downstream packages that consume the coin type.
-- Upgradable. The template itself is never deployed. Generated coins have their UpgradeCap burned immediately after publication.
-- Flexible. Coin metadata (name, symbol, decimals, icon) is immutable after deployment by design.
+- Upgradable. The template itself is never deployed. A generated coin's UpgradeCap is burned after publication once the operator confirms (`BURN`); declining keeps it, and the deploy summary reports which.
+- Flexible. Symbol, name and decimals are fixed at publish by design; description and icon URL are fixed too under the `frozen` metadata policy and otherwise editable by the `MetadataCap` holder.
 
 ---
 
@@ -26,8 +26,8 @@ This package is a **generic Sui coin template and deployment system**. It is not
 
 The entire coin system is designed around immutability as a feature, not a limitation:
 
-- **On-chain metadata is permanent.** Symbol, name, decimals, and icon are set once at deployment and cannot change. This is intentional.
-- **Package code is frozen.** The UpgradeCap is burned immediately after publication, making the package code permanently immutable.
+- **Core metadata is permanent.** Symbol, name and decimals are set once at deployment and cannot change; with the `frozen` metadata policy so are the description and icon URL (the `MetadataCap` is deleted in `init`). This is intentional.
+- **Package code is frozen.** The UpgradeCap is burned after publication (typed `BURN` confirmation, or `--confirm-immutable` for `publish.sh`), making the package code permanently immutable; the recorded state, never an assumption, is reported.
 - **Type identity is stable.** The coin type (`<PACKAGE_ID>::<MODULE_NAME>::<STRUCT_NAME>`) is a global, permanent anchor that downstream systems and users depend on.
 
 This design ensures the coin type is a trust commitment that cannot be altered unilaterally.
@@ -36,7 +36,7 @@ This design ensures the coin type is a trust commitment that cannot be altered u
 
 - **This package:** Type definition, initialization, metadata commitment. Nothing else.
 - **Downstream consumer packages:** Minting, burning, accounting, application logic.
-- **`@meddleware/sui-walrus-storage`:** Off-chain asset metadata (icons, extended descriptions).
+- **The Walrus storage packages (`@meddleware/walrus-storage-client`):** Off-chain asset storage (icons, extended descriptions).
 
 This separation keeps the coin primitive minimal and auditable.
 
@@ -80,8 +80,8 @@ This ensures:
 ├── tests/generator.test.sh      # Shell tests: generator + burn reporting against a stub `sui`
 ├── docs/                        # IMPLEMENTATION_GUIDE.md, WALRUS.md, onchain/, audit/ (not shipped)
 ├── README.md                    # User-facing reference and feature overview
-├── AGENTS.md, SECURITY.md       # Agent guide, security policy
-└── CLAUDE.md                    # This file
+├── AGENTS.md, SECURITY.md       # Pointer to CLAUDE.md, security policy
+└── CLAUDE.md                    # This file (the single instruction file)
 
 my_token/         # Example: a generated concrete instance
 ├── Move.toml
@@ -121,7 +121,7 @@ my_token/         # Example: a generated concrete instance
 
 **Purpose:** Transform the template into a concrete coin package.
 
-**Input:** 8 required environment variables (all non-empty):
+**Input:** 8 required environment variables (all non-empty), plus the optional supply, metadata, project and licence variables (`TOKEN_INITIAL_SUPPLY`, `TOKEN_SUPPLY_POLICY`, `TOKEN_METADATA_POLICY`, `TOKEN_PROJECT_NAME`, licence settings; see README):
 
 - `TOKEN_PACKAGE_NAME`, `TOKEN_MODULE_NAME`, `TOKEN_STRUCT_NAME`
 - `TOKEN_SYMBOL`, `TOKEN_NAME`, `TOKEN_DESCRIPTION`
@@ -190,6 +190,41 @@ re-run resumes rather than republishing. Unknown arguments are rejected.
 
 ---
 
+## Repository role and common tasks
+
+In a consuming project `token_issuance_template/` is a template system, not a coin package; a generated package (e.g. `my_token/`) is a
+concrete instance committed to the consuming project, one per coin type. Downstream packages hold a hardcoded type dependency on the
+generated type (`my_token::mytoken::MYTOKEN`); the type path is fixed at generation and permanent after deployment, so downstream
+packages reference the coin by package id and must be updated after deployment. No business logic lives here: minting, burning and
+accounting belong to the packages that consume the coin type.
+
+```bash
+# full pipeline (Walrus upload, generate, test, build, publish, burn, hand over)
+TOKEN_PACKAGE_NAME=mycoin_coin TOKEN_MODULE_NAME=mycoin TOKEN_STRUCT_NAME=MYCOIN TOKEN_SYMBOL="MYCOIN" \
+TOKEN_NAME="My Coin" TOKEN_DESCRIPTION="..." TOKEN_DECIMALS="9" TOKEN_ICON_URL="https://..." \
+bash scripts/deploy_token.sh
+# generation only (the icon is already on Walrus): same variables, then
+bash scripts/03_create_token.sh --output-dir mycoin_coin
+```
+
+Downstream Move wiring after deployment:
+
+```toml
+[addresses]
+mycoin = "0x<DEPLOYED_PACKAGE_ID>"
+[dependencies]
+MyCoin = { local = "../mycoin_coin" }
+```
+
+- Change the icon URL before mainnet: regenerate with `03_create_token.sh`, review the diff, commit, then deploy.
+- Publish an existing instance to another network: its `scripts/publish.sh`.
+- Check a deployment: `sui client object <PACKAGE_ID>` and `sui client objects --address <TREASURY_ADDRESS>`; record the ids in `deployments.md`.
+- Failed deployment after the publish: the recorded `.env.<network>` is the resume point; the scripts print the exact manual recovery commands
+  (UpgradeCap burn, TreasuryCap / supply transfer with the object id).
+- Validate Move syntax, coin registry APIs and package structure against the Sui Knowledge Docs MCP (`sui-docs`) and the framework docs in
+  `node_modules/@mysten/sui/docs/`.
+- Test generated instances with `sui move test --path my_token --build-env testnet`; they inherit the template's tests by substitution.
+
 ## Shipped bytecode (D23)
 
 - `bytecode/token_issuance_template.mv` and `bytecode/build-info.json` ship in the npm package and are
@@ -224,7 +259,7 @@ re-run resumes rather than republishing. Unknown arguments are rejected.
 
 - Manually edit generated coin source code. Regenerate using `03_create_token.sh` instead.
 - Deploy the template itself (it's not a coin, just a mold).
-- Assume metadata can be changed later. It is locked forever after deployment.
+- Assume symbol, name or decimals can be changed later; they are locked forever after deployment (description and icon URL only stay editable under the `updatable` metadata policy).
 - Change TOKEN_DECIMALS or TOKEN_SYMBOL without understanding the downstream impact (wallets, exchanges, integrations all depend on these being stable).
 
 ### Scope-Specific Guidance
@@ -244,7 +279,7 @@ re-run resumes rather than republishing. Unknown arguments are rejected.
 
 **For documentation changes:**
 
-- `README.md` and `IMPLEMENTATION_GUIDE.md` describe the system as a whole.
+- `README.md` and `docs/IMPLEMENTATION_GUIDE.md` describe the system as a whole.
 - They apply to all generated instances and the template itself.
 - Keep them in sync with actual script behavior.
 
@@ -278,9 +313,9 @@ VITE_COIN_TYPE=0x<PACKAGE_ID>::<MODULE_NAME>::<STRUCT_NAME>
 
 Update after deployment to ensure the frontend uses the correct coin type.
 
-### Walrus Blob Lifetime (`@meddleware/sui-walrus-storage`)
+### Walrus Blob Lifetime
 
-The icon URL (from Phase 2 of deploy_token.sh) is immutable on-chain. Off-chain lifetime management:
+The icon URL (from Phase 2 of deploy_token.sh) is fixed on-chain under the `frozen` metadata policy (otherwise only the `MetadataCap` holder can change it). Either way the blob must stay alive; off-chain lifetime management:
 
 - Blob object ID is printed in Phase 2 and Phase 8 summaries.
 - Before expiry, call `walrus extend --blob-obj-id <BLOB_OBJECT_ID> --epochs-extended 200 --context mainnet`.
@@ -354,5 +389,5 @@ If a design choice is ambiguous:
 
 - **README.md** — Feature overview, quick start, architecture, troubleshooting.
 - **deployments.md** — Post-deployment artefact recording and blob lifetime tracking. Lives in each generated token package root (e.g., `my_token/deployments.md`); sourced from `templates/deployments.md`.
-- **IMPLEMENTATION_GUIDE.md** — Deployment workflows (testnet, mainnet), decision tree, common mistakes, best practices.
+- **docs/IMPLEMENTATION_GUIDE.md** — Deployment workflows (testnet, mainnet), decision tree, common mistakes, best practices.
 - **Sui Move Docs** — Official Sui documentation for coin registry and framework APIs.
