@@ -27,16 +27,20 @@ integrate with the resulting coin. See the [API reference](api-reference.md) for
    `@meddleware/token-issuance-ui` (bytecode patching via `@mysten/move-bytecode-template`) and
    `scripts/03_create_token.sh` (source generation). Renaming or merging them breaks both.
 
-## Coupling with `token-issuance-ui`
+## Coupling with `@meddleware/token-issuance-client`
 
-| Artefact in token-issuance-ui | Derived from | Kept in sync by |
+The compiled template, its patcher and the text files of the downloadable source package live in `@meddleware/token-issuance-client`
+(`token-issuance-ui` only draws the form and calls it). The client regenerates them from this package:
+
+| Artefact in token-issuance-client | Derived from | Kept in sync by |
 | --- | --- | --- |
-| `src/move-template/token_issuance_template.mv` + base64 in `template.ts` | compiled template bytecode | `npm run regen:template` (builds from `node_modules/@meddleware/token-issuance-template-sui`) |
-| `src/template-src/files.json` (downloadable source package) | `Move.toml`, source, `templates/*` | `npm run sync:template`; asserted by `tests/templateParity.test.ts` |
-| `TEMPLATE_DEFAULTS` / `TEMPLATE_IDENTIFIERS` | the constants above | `npm run verify:template` |
+| `src/template/artifact.ts`: `TEMPLATE_MODULE_B64`, `TEMPLATE_BUILD_INFO` | the compiled template bytecode and `build-info.json` of this package | `npm run gen:template` (reads the pinned `@meddleware/token-issuance-template-sui` devDependency) |
+| `src/template/files.ts`: `TEMPLATE_FILES` (the downloadable source package) | `Move.toml`, the source, `scripts/publish.sh` and the other text files | `npm run gen:template`; `npm run check:template` fails when the committed files differ |
+| `TEMPLATE_DEFAULTS` / `TEMPLATE_IDENTIFIERS` | the constants and identifiers the patcher replaces | `gen:template` checks them against both the source and the bytecode's constant pool |
 
-After publishing a new template version: bump the dependency in token-issuance-ui, then run
-`regen:template`, `sync:template` and `verify:template`.
+The generator checks itself before it writes: the bytecode and source hashes match `build-info.json`, the module decodes and re-encodes byte for byte,
+and every identifier and default the patcher replaces is present. After publishing a new template version: bump the devDependency in token-issuance-client,
+run `npm run gen:template` and then `npm run check:template`, release the client, and bump it in the apps.
 
 ## Deploying a generated package
 
